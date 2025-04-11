@@ -5,9 +5,6 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-# Instala pg_isready
-RUN apt-get update && apt-get install -y postgresql-client
-
 # Copia e dá permissão de execução ao script
 COPY wait-for-postgres.sh .
 RUN chmod +x wait-for-postgres.sh

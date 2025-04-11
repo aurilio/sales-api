@@ -8,6 +8,7 @@ using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Polly;
 using Serilog;
 
 namespace Ambev.DeveloperEvaluation.WebApi;
@@ -19,6 +20,11 @@ public class Program
         try
         {
             Log.Information("Starting web application");
+            
+            foreach (var envVar in Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>())
+            {
+                Log.Information($"Environment Variable: {envVar.Key} = {envVar.Value}");
+            }
 
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
             builder.AddDefaultLogging();
@@ -51,15 +57,45 @@ public class Program
             });
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            
+            builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
             var app = builder.Build();
+            
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<DefaultContext>();
+                var connection = db.Database.GetDbConnection();
+
+                var retryPolicy = Policy
+                    .Handle<Exception>()
+                    .WaitAndRetry(
+                        retryCount: 10,
+                        sleepDurationProvider: attempt => TimeSpan.FromSeconds(5),
+                        onRetry: (exception, timeSpan, retryCount, context) =>
+                        {
+                            Log.Warning(exception, $"Tentativa {retryCount} falhou. Tentando novamente em {timeSpan.TotalSeconds} segundos...");
+                        });
+
+                retryPolicy.Execute(() =>
+                {
+                    Log.Information("Testando conexão com o banco...");
+                    connection.Open(); // Verifica se o banco está acessível
+                    connection.Close();
+
+                    Log.Information("Aplicando migrations pendentes...");
+                    db.Database.Migrate();
+                    Log.Information("Migrations aplicadas com sucesso!");
+                });
+            }
+
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            //}
 
             app.UseHttpsRedirection();
 
