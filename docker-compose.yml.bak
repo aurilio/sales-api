@@ -72,7 +72,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - redis-data:/data # Volume para os dados do Redis
 
   pgadmin:
     container_name: pgadmin4
@@ -83,7 +83,7 @@ services:
     ports:
       - "8085:80"
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
+      - pgadmin-data:/var/lib/pgadmin # Volume para as configurações do pgAdmin
     depends_on:
       - ambev.developerevaluation.database
     restart: unless-stopped
