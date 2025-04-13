@@ -80,12 +80,29 @@ public class Program
                 retryPolicy.Execute(() =>
                 {
                     Log.Information("Testando conexão com o banco...");
-                    connection.Open(); // Verifica se o banco está acessível
-                    connection.Close();
+                    try
+                    {
+                        connection.Open();
+                        connection.Close();
+                        Log.Information("Conexão com o banco bem-sucedida!");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Erro ao testar a conexão com o banco.");
+                        throw;
+                    }
 
                     Log.Information("Aplicando migrations pendentes...");
-                    db.Database.Migrate();
-                    Log.Information("Migrations aplicadas com sucesso!");
+                    try
+                    {
+                        db.Database.Migrate();
+                        Log.Information("Migrations aplicadas com sucesso!");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Erro ao aplicar as migrations.");
+                        throw;
+                    }
                 });
             }
 
