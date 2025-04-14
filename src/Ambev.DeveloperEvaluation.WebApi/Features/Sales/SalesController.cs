@@ -1,4 +1,5 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Application.Sales.ListSales;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
@@ -149,10 +150,12 @@ public class SalesController : BaseController
             return BadRequest(validationResult.Errors);
 
         var command = _mapper.Map<DeleteUserCommand>(request.Id);
-        await _mediator.Send(command, cancellationToken);
+        var response = await _mediator.Send(command, cancellationToken);
+        var apiResponse = _mapper.Map<DeleteSaleResponse>(response);
 
-        return Ok(new ApiResponse
+        return Ok(new ApiResponseWithData<DeleteSaleResponse>
         {
+            Data = apiResponse,
             Success = true,
             Message = "Sale deleted successfully"
         });

@@ -123,6 +123,11 @@ public class Sale : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void UpdateUpdatedAt()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     /// <summary>
     /// Updates the total amount of the sale.
     /// This might be useful if the items in the sale are modified.

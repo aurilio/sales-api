@@ -57,11 +57,12 @@ public class Program
             });
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-            
-            builder.WebHost.UseUrls("http://0.0.0.0:8080");
+
+            if (!builder.Environment.IsDevelopment())
+                builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
             var app = builder.Build();
-            
+
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<DefaultContext>();
@@ -108,11 +109,11 @@ public class Program
 
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
-            //if (app.Environment.IsDevelopment())
-            //{
+            if (app.Environment.IsDevelopment())
+            {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            //}
+            }
 
             app.UseHttpsRedirection();
 
