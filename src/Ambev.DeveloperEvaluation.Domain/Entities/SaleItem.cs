@@ -10,10 +10,24 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities;
 public class SaleItem : BaseEntity
 {
     /// <summary>
-    /// The identifier of the product included in this sale item.
-    /// Must not be null or empty and should reference a valid product.
+    /// The identifier of the sale this item belongs to (Foreign Key).
     /// </summary>
-    public string ProductId { get; set; } = string.Empty;
+    public Guid SaleId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the Sale this item belongs to.
+    /// </summary>
+    public Sale Sale { get; set; }
+
+    /// <summary>
+    /// The external identifier of the product in this item.
+    /// </summary>
+    public int ProductId { get; set; }
+
+    /// <summary>
+    /// The denormalized title or name of the product.
+    /// </summary>
+    public string ProductName { get; set; }
 
     /// <summary>
     /// The quantity of the product sold in this item.
@@ -32,6 +46,11 @@ public class SaleItem : BaseEntity
     /// Must be greater than or equal to zero.
     /// </summary>
     public decimal Discount { get; set; }
+
+    /// <summary>
+    /// The total amount for this item (Quantity * UnitPrice - Discount).
+    /// </summary>
+    public decimal TotalAmount { get; private set; }
 
     /// <summary>
     /// Gets the date and time when this sale item record was created.
@@ -109,6 +128,7 @@ public class SaleItem : BaseEntity
             throw new ArgumentException("Quantity must be greater than zero.", nameof(newQuantity));
         }
         Quantity = newQuantity;
+        TotalAmount = GetTotalPrice();
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -123,6 +143,7 @@ public class SaleItem : BaseEntity
             throw new ArgumentException("Unit price cannot be negative.", nameof(newUnitPrice));
         }
         UnitPrice = newUnitPrice;
+        TotalAmount = GetTotalPrice();
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -137,6 +158,7 @@ public class SaleItem : BaseEntity
             throw new ArgumentException("Discount cannot be negative.", nameof(newDiscount));
         }
         Discount = newDiscount;
+        TotalAmount = GetTotalPrice();
         UpdatedAt = DateTime.UtcNow;
     }
 }
