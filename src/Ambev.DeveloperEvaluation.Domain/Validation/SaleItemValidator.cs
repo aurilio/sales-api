@@ -10,8 +10,8 @@ public class SaleItemValidator : AbstractValidator<SaleItem>
         RuleFor(item => item.ProductId)
             .NotEmpty()
             .WithMessage("Product ID is required.")
-            .MaximumLength(50)
-            .WithMessage("Product ID cannot exceed 50 characters.");
+            .NotEqual(0)
+            .WithMessage("Product ID cannot be zero.");
 
         RuleFor(item => item.Quantity)
             .GreaterThan(0)

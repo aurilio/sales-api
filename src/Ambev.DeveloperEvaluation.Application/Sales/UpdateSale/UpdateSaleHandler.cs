@@ -44,21 +44,21 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         if (saleToUpdate == null)
             throw new KeyNotFoundException($"Venda com ID {command.Id} não encontrada.");
 
-        _mapper.Map(command, saleToUpdate); // Map properties from command to entity
+        _mapper.Map(command, saleToUpdate);
         saleToUpdate.UpdateUpdatedAt();
-        saleToUpdate.TotalAmount = saleToUpdate.Items.Sum(item => item.Quantity * item.UnitPrice - item.Discount);
 
-        // You might need more sophisticated logic to handle updates to the Items collection
-        // (e.g., adding, removing, updating existing items). For now, we're assuming
-        // the command's Items will replace the existing ones.
         if (command.Items != null)
         {
             saleToUpdate.Items.Clear();
             foreach (var itemCommand in command.Items)
             {
-                saleToUpdate.Items.Add(_mapper.Map<SaleItem>(itemCommand));
+                var saleItem = _mapper.Map<SaleItem>(itemCommand);
+                saleToUpdate.AddItem(saleItem);
             }
-            saleToUpdate.TotalAmount = saleToUpdate.Items.Sum(item => item.Quantity * item.UnitPrice - item.Discount);
+        }
+        else
+        {
+            //TODO: Se não houver itens no comando de atualização, garantir que o TotalAmount seja recalculado
         }
 
         var response = await _saleRepository.UpdateAsync(saleToUpdate);

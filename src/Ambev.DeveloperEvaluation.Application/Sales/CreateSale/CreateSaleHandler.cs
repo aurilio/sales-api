@@ -40,7 +40,16 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             throw new ValidationException(validationResult.Errors);
 
         var sale = _mapper.Map<Sale>(command);
-        sale.TotalAmount = sale.Items.Sum(item => item.Quantity * item.UnitPrice - item.Discount);
+        sale.Items.Clear();
+        //TODO: melhorar lógica
+        if (command.Items != null && command.Items.Any())
+        {
+            foreach (var itemCommand in command.Items)
+            {
+                var saleItem = _mapper.Map<SaleItem>(itemCommand);
+                sale.AddItem(saleItem);
+            }
+        }
 
         var createdUser = await _saleRepository.CreateAsync(sale, cancellationToken);
         var result = _mapper.Map<CreateSaleResult>(createdUser);

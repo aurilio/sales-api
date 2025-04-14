@@ -23,22 +23,25 @@ public class Sale : BaseEntity
     public DateTime SaleDate { get; set; }
 
     /// <summary>
-    /// The identifier of the customer associated with the sale.
-    /// Must not be null or empty and should reference a valid customer.
+    /// The external identifier of the customer who made the sale.
     /// </summary>
-    public string CustomerId { get; set; } = string.Empty;
+    public Guid CustomerId { get; set; }
+
+    /// <summary>
+    /// The denormalized name of the customer.
+    /// </summary>
+    public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>
     /// The total amount of the sale.
     /// Must be greater than zero.
     /// </summary>
-    public decimal TotalAmount { get; set; }
+    public decimal TotalAmount { get; private set; }
 
     /// <summary>
-    /// The identifier of the branch where the sale was made.
-    /// Must not be null or empty and should reference a valid branch.
+    /// The branch where the sale was made.
     /// </summary>
-    public string BranchId { get; set; } = string.Empty;
+    public string Branch { get; set; } = string.Empty;
 
     /// <summary>
     /// Indicates whether the sale has been cancelled.
@@ -50,7 +53,7 @@ public class Sale : BaseEntity
     /// The collection of items included in this sale.
     /// Must not be null and should contain at least one item for a valid sale.
     /// </summary>
-    public List<SaleItem> Items { get; set; } = new List<SaleItem>();
+    public IList<SaleItem> Items { get; set; } = new List<SaleItem>();
 
     /// <summary>
     /// Gets the date and time when the sale record was created.
@@ -69,6 +72,44 @@ public class Sale : BaseEntity
     public Sale()
     {
         CreatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Adds a new item to the sale and recalculates the total amount.
+    /// </summary>
+    /// <param name="item">The <see cref="SaleItem"/> to add.</param>
+    public void AddItem(SaleItem item)
+    {
+        if (item == null)
+        {
+            throw new ArgumentNullException(nameof(item), "Sale item cannot be null.");
+        }
+        Items.Add(item);
+        CalculateTotalAmount();
+    }
+
+    /// <summary>
+    /// Removes an item from the sale and recalculates the total amount.
+    /// </summary>
+    /// <param name="item">The <see cref="SaleItem"/> to remove.</param>
+    /// <returns>True if the item was successfully removed; otherwise, false.</returns>
+    public bool RemoveItem(SaleItem item)
+    {
+        var removed = Items.Remove(item);
+        if (removed)
+        {
+            CalculateTotalAmount();
+        }
+        return removed;
+    }
+
+    /// <summary>
+    /// Recalculates the total amount of the sale based on the current items.
+    /// </summary>
+    private void CalculateTotalAmount()
+    {
+        TotalAmount = Items.Sum(item => item.TotalAmount);
+        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -125,21 +166,6 @@ public class Sale : BaseEntity
 
     public void UpdateUpdatedAt()
     {
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Updates the total amount of the sale.
-    /// This might be useful if the items in the sale are modified.
-    /// </summary>
-    /// <param name="newTotalAmount">The new total amount of the sale.</param>
-    public void UpdateTotalAmount(decimal newTotalAmount)
-    {
-        if (newTotalAmount < 0)
-        {
-            throw new ArgumentException("Total amount cannot be negative.", nameof(newTotalAmount));
-        }
-        TotalAmount = newTotalAmount;
         UpdatedAt = DateTime.UtcNow;
     }
 }
