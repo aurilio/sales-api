@@ -21,7 +21,12 @@ public class CreateSaleCommand : IRequest<CreateSaleResult>
     /// <summary>
     /// Information about the customer (external identifier).
     /// </summary>
-    public string CustomerId { get; set; } = string.Empty;
+    public Guid CustomerId { get; set; }
+
+    /// <summary>
+    /// The denormalized name of the customer.
+    /// </summary>
+    public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>
     /// The total amount of the sale.
@@ -31,7 +36,7 @@ public class CreateSaleCommand : IRequest<CreateSaleResult>
     /// <summary>
     /// The branch where the sale was made.
     /// </summary>
-    public string BranchId { get; set; } = string.Empty;
+    public string Branch { get; set; } = string.Empty;
 
     /// <summary>
     /// A list of products included in the sale.
@@ -41,7 +46,7 @@ public class CreateSaleCommand : IRequest<CreateSaleResult>
     /// <summary>
     /// Indicates if the sale is cancelled or not.
     /// </summary>
-    public bool IsCancelled { get; set; }
+    public bool IsCancelled { get; set; } = false;
 
     public ValidationResultDetail Validate()
     {

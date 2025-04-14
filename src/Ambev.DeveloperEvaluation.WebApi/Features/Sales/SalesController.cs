@@ -50,7 +50,7 @@ public class SalesController : BaseController
     {
         var validator = new CreateSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
-        
+
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
@@ -61,7 +61,7 @@ public class SalesController : BaseController
         return Created<CreateSaleResponse>(
                 routeName: nameof(GetSale),
                 routeValues: new { id = apiResponse.Id },
-                data: _mapper.Map<CreateSaleResponse>(response),
+                data: apiResponse,
                 message: "Sale created successfully"
             );
     }
@@ -72,7 +72,7 @@ public class SalesController : BaseController
     /// <param name="id">The unique identifier of the sale record.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The details of the requested sale record.</returns>
-    [HttpGet("{id}")]
+    [HttpGet("{id}", Name = "GetSale")]
     [ProducesResponseType(typeof(ApiResponseWithData<GetSaleResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
@@ -81,7 +81,7 @@ public class SalesController : BaseController
         var request = new GetSaleRequest { Id = id };
         var validator = new GetSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
-        
+
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
@@ -112,7 +112,7 @@ public class SalesController : BaseController
     {
         var validator = new UpdateSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
-        
+
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
@@ -145,7 +145,7 @@ public class SalesController : BaseController
         var request = new DeleteSaleRequest { Id = id };
         var validator = new DeleteSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
-        
+
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
@@ -173,7 +173,7 @@ public class SalesController : BaseController
     {
         var validator = new ListSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
-        
+
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
@@ -183,7 +183,7 @@ public class SalesController : BaseController
         var getSaleResponses = _mapper.Map<IEnumerable<GetSaleResponse>>(response);
         var paginatedResponse = new PaginatedResponse<GetSaleResponse>
         {
-            CurrentPage = response. CurrentPage,
+            CurrentPage = response.CurrentPage,
             TotalPages = response.TotalPages,
             TotalCount = response.TotalCount,
             Data = getSaleResponses

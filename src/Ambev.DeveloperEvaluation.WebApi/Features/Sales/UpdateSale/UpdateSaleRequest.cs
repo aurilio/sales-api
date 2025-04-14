@@ -20,18 +20,17 @@ public class UpdateSaleRequest
     /// <summary>
     /// Information about the customer (external identifier).
     /// </summary>
-    public string CustomerId { get; set; } = string.Empty;
+    public Guid? CustomerId { get; set; }
 
     /// <summary>
-    /// The total amount of the sale.
+    /// The denormalized name of the customer.
     /// </summary>
-    [Range(0.01, double.MaxValue)]
-    public decimal? TotalAmount { get; set; }
+    public string? CustomerName { get; set; }
 
     /// <summary>
     /// The branch where the sale was made.
     /// </summary>
-    public string BranchId { get; set; } = string.Empty;
+    public string Branch { get; set; } = string.Empty;
 
     /// <summary>
     /// A list of products included in the sale.

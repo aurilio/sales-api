@@ -28,6 +28,11 @@ public class UpdateSaleResponse
     public string CustomerId { get; set; } = string.Empty;
 
     /// <summary>
+    /// The denormalized name of the customer.
+    /// </summary>
+    public string? CustomerName { get; set; }
+
+    /// <summary>
     /// The total amount of the sale.
     /// </summary>
     public decimal TotalAmount { get; set; }
@@ -35,7 +40,7 @@ public class UpdateSaleResponse
     /// <summary>
     /// The branch where the sale was made.
     /// </summary>
-    public string BranchId { get; set; } = string.Empty;
+    public string Branch { get; set; } = string.Empty;
 
     /// <summary>
     /// A list of items included in the sale.
@@ -46,4 +51,9 @@ public class UpdateSaleResponse
     /// Indicates if the sale is cancelled or not.
     /// </summary>
     public bool IsCancelled { get; set; }
+
+    /// <summary>
+    /// Gets the date and time of the last update to the sale's information.
+    /// </summary>
+    public DateTime? UpdatedAt { get; set; }
 }

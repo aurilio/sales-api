@@ -15,24 +15,25 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
         RuleFor(x => x.SaleDate)
             .NotEmpty()
             .WithMessage("Sale date is required.")
-            .LessThanOrEqualTo(DateTime.Now)
+            .LessThanOrEqualTo(DateTime.Now.ToLocalTime())
             .WithMessage("Sale date cannot be in the future.");
 
         RuleFor(x => x.CustomerId)
             .NotEmpty()
             .WithMessage("Customer ID is required.")
-            .MaximumLength(50)
-            .WithMessage("Customer ID cannot exceed 50 characters.");
+            .Must(BeAValidGuid).WithMessage("Customer ID must be a valid GUID.");
 
-        RuleFor(x => x.TotalAmount)
-            .GreaterThan(0)
-            .WithMessage("Total amount must be greater than zero.");
-
-        RuleFor(x => x.BranchId)
+        RuleFor(x => x.CustomerName)
             .NotEmpty()
-            .WithMessage("Branch ID is required.")
+            .WithMessage("Customer name is required.")
+            .MaximumLength(100)
+            .WithMessage("Customer name cannot exceed 100 characters.");
+
+        RuleFor(x => x.Branch)
+            .NotEmpty()
+            .WithMessage("Branch is required.")
             .MaximumLength(50)
-            .WithMessage("Branch ID cannot exceed 50 characters.");
+            .WithMessage("Branch cannot exceed 50 characters.");
 
         RuleFor(x => x.Items)
             .NotEmpty()
@@ -42,5 +43,10 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
         RuleFor(x => x.IsCancelled)
             .NotNull()
             .WithMessage("IsCancelled must be specified.");
+    }
+
+    private bool BeAValidGuid(Guid customerId)
+    {
+        return customerId != Guid.Empty;
     }
 }
