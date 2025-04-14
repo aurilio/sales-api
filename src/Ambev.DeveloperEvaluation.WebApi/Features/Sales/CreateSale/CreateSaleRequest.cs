@@ -23,20 +23,18 @@ public class CreateSaleRequest
     /// Information about the customer (external identifier).
     /// </summary>
     [Required]
-    public required string CustomerId { get; set; }
+    public Guid CustomerId { get; set; }
 
     /// <summary>
-    /// The total amount of the sale.
+    /// The denormalized name of the customer.
     /// </summary>
-    [Required]
-    [Range(0.01, double.MaxValue)]
-    public decimal TotalAmount { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>
     /// The branch where the sale was made.
     /// </summary>
     [Required]
-    public required string BranchId { get; set; }
+    public required string Branch { get; set; }
 
     /// <summary>
     /// A list of products included in the sale.
@@ -47,5 +45,5 @@ public class CreateSaleRequest
     /// <summary>
     /// Indicates if the sale is cancelled or not.
     /// </summary>
-    public bool IsCancelled { get; set; }
+    public bool IsCancelled { get; set; } = false;
 }

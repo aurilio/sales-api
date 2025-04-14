@@ -26,7 +26,12 @@ public class UpdateSaleCommand : IRequest<UpdateSaleResult>
     /// <summary>
     /// Information about the customer (external identifier).
     /// </summary>
-    public string CustomerId { get; set; } = string.Empty;
+    public Guid? CustomerId { get; set; }
+
+    /// <summary>
+    /// The denormalized name of the customer.
+    /// </summary>
+    public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>
     /// The total amount of the sale.
@@ -36,7 +41,7 @@ public class UpdateSaleCommand : IRequest<UpdateSaleResult>
     /// <summary>
     /// The branch where the sale was made.
     /// </summary>
-    public string BranchId { get; set; } = string.Empty;
+    public string Branch { get; set; } = string.Empty;
 
     /// <summary>
     /// A list of products included in the sale.
