@@ -38,7 +38,7 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
-
+        //TODO: não trouxe os itens
         var saleToUpdate = await _saleRepository.GetByIdAsync(command.Id);
 
         if (saleToUpdate == null)

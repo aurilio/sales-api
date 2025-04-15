@@ -6,9 +6,19 @@
 public class SaleItemResponse
 {
     /// <summary>
+    /// The unique identifier of the sale item.
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
     /// The external identifier of the product.
     /// </summary>
-    public string ProductId { get; set; } = string.Empty;
+    public int ProductId { get; set; }
+
+    /// <summary>
+    /// The denormalized title or name of the product.
+    /// </summary>
+    public string ProductName { get; set; } = string.Empty;
 
     /// <summary>
     /// The quantity of the product sold.
@@ -28,5 +38,15 @@ public class SaleItemResponse
     /// <summary>
     /// The total amount for this item.
     /// </summary>
-    public decimal ItemTotal { get; set; }
+    public decimal TotalAmount { get; set; }
+
+    /// <summary>
+    /// Gets the date and time when this sale item record was created.
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Gets the date and time of the last update to this sale item's information.
+    /// </summary>
+    public DateTime? UpdatedAt { get; set; }
 }
