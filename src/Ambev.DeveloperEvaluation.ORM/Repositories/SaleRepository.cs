@@ -2,6 +2,7 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
@@ -96,6 +97,7 @@ public class SaleRepository : ISaleRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        //TODO: Não está trazendo itens
         var sale = await _context.Sales.FindAsync(id, cancellationToken);
         if (sale == null)
             return false;

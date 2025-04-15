@@ -52,6 +52,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         }
 
         var createdUser = await _saleRepository.CreateAsync(sale, cancellationToken);
+        //TODO: mapper está perdendo itens
         var result = _mapper.Map<CreateSaleResult>(createdUser);
 
         return result;
