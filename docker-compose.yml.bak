@@ -1,0 +1,95 @@
+services:
+  ambev.developerevaluation.webapi:
+    container_name: ambev_developer_evaluation_webapi
+    image: ${DOCKER_REGISTRY-}ambevdeveloperevaluationwebapi
+    build:
+      context: .
+      dockerfile: src/Ambev.DeveloperEvaluation.WebApi/Dockerfile
+    entrypoint: ["./wait-for-postgres.sh", "ambev.developerevaluation.database", "dotnet", "Ambev.DeveloperEvaluation.WebApi.dll"]
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - POSTGRES_USER=developer
+      - POSTGRES_PASSWORD=ev@luAt10n
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    # volumes:
+      # - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      # - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+    depends_on:
+      ambev.developerevaluation.database:
+        condition: service_healthy
+      ambev.developerevaluation.nosql:
+        condition: service_started
+      ambev.developerevaluation.cache:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  ambev.developerevaluation.database:
+    container_name: ambev_developer_evaluation_database
+    image: postgres:13
+    environment:
+      POSTGRES_DB: developer_evaluation
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: ev@luAt10n
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U developer -d developer_evaluation"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ambev.developerevaluation.nosql:
+    container_name: ambev_developer_evaluation_nosql
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: developer
+      MONGO_INITDB_ROOT_PASSWORD: ev@luAt10n
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  ambev.developerevaluation.cache:
+    container_name: ambev_developer_evaluation_cache
+    image: redis:7.4.1-alpine
+    command: redis-server --requirepass ev@luAt10n
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: developer
+      MONGO_INITDB_ROOT_PASSWORD: ev@luAt10n
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data # Volume para os dados do Redis
+
+  pgadmin:
+    container_name: pgadmin4
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: aurilio@teste.com
+      PGADMIN_DEFAULT_PASSWORD: aurilio@1
+    ports:
+      - "8085:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin # Volume para as configurações do pgAdmin
+    depends_on:
+      - ambev.developerevaluation.database
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  mongo-data:
+  redis-data:
+  pgadmin-data:
