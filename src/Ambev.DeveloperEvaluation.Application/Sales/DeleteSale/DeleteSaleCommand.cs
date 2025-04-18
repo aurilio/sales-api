@@ -1,5 +1,4 @@
-﻿using Ambev.DeveloperEvaluation.Application.Users.DeleteUser;
-using Ambev.DeveloperEvaluation.Common.Validation;
+﻿using Ambev.DeveloperEvaluation.Common.Validation;
 using MediatR;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;

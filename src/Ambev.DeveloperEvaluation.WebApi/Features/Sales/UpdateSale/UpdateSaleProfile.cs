@@ -1,6 +1,6 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.Domain.ValueObjects;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
-using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using AutoMapper;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
@@ -16,19 +16,27 @@ public class UpdateSaleProfile : Profile
     /// </summary>
     public UpdateSaleProfile()
     {
-        CreateMap<UpdateSaleRequest, UpdateSaleCommand>()
-            .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
+        CreateMap<UpdateSaleRequest, UpdateSaleCommand>();
+        CreateMap<SaleItemRequest, UpdateSaleItemCommand>()
+            .ForMember(dest => dest.ProductDetails, opt => opt.MapFrom(src => new ProductDetails(
+                src.ProductDetails.Title,
+                src.ProductDetails.Category,
+                src.ProductDetails.Price,
+                src.ProductDetails.Image
+            )));
 
-        CreateMap<SaleItemRequest, UpdateSaleItemCommand>();
+        CreateMap<UpdateSaleResult, UpdateSaleResponse>();
+        CreateMap<UpdateSaleItemResult, SaleItemResponse>();
+        CreateMap<ProductDetails, ProductDetailsResponse>();
 
-        CreateMap<UpdateSaleItemRequest, UpdateSaleItemCommand>()
-            .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
-            .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
-            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
-            .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.Discount));
+        CreateMap<UpdateSaleItemRequest, UpdateSaleItemCommand>();
 
-        CreateMap<UpdateSaleResult, UpdateSaleResponse>()
-            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Sale.Id))
-            .ForMember(dest => dest.IsCancelled, opt => opt.MapFrom(src => src.Sale.IsCancelled));
+        CreateMap<ProductDetailsRequest, ProductDetails>()
+        .ConstructUsing(src => new ProductDetails(
+            src.Title,
+            src.Category,
+            src.Price,
+            src.Image
+        ));
     }
 }

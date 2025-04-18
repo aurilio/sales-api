@@ -22,6 +22,7 @@ public class GetSaleQuery : IRequest<GetSaleResult>
     {
         var validator = new GetSaleQueryValidator();
         var result = validator.Validate(this);
+
         return new ValidationResultDetail
         {
             IsValid = result.IsValid,

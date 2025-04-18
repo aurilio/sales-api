@@ -1,4 +1,6 @@
-﻿namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+﻿using Ambev.DeveloperEvaluation.Domain.ValueObjects;
+
+namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
 /// <summary>
 /// Represents an item in the sale for the update command.
@@ -6,22 +8,32 @@
 public class UpdateSaleItemCommand
 {
     /// <summary>
-    /// The external identifier of the product.
+    /// Product identifier.
     /// </summary>
-    public string ProductId { get; set; } = string.Empty;
+    public Guid ProductId { get; set; }
 
     /// <summary>
-    /// The quantity of the product sold.
+    /// Quantity of the product.
     /// </summary>
-    public int? Quantity { get; set; }
+    public int Quantity { get; set; }
 
     /// <summary>
-    /// The unit price of the product at the time of sale.
+    /// Unit price of the product.
     /// </summary>
-    public decimal? UnitPrice { get; set; }
+    public decimal UnitPrice { get; set; }
 
     /// <summary>
-    /// The discount applied to this item (if any).
+    /// Discount applied to the item.
     /// </summary>
-    public decimal? Discount { get; set; }
+    public decimal Discount { get; set; }
+
+    /// <summary>
+    /// Total amount for the item.
+    /// </summary>
+    public decimal TotalAmount { get; set; }
+
+    /// <summary>
+    /// Product detail snapshot.
+    /// </summary>
+    public ProductDetails ProductDetails { get; set; } = default!;
 }

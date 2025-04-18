@@ -19,16 +19,15 @@ public class GetSaleProfile : Profile
         CreateMap<Guid, GetSaleQuery>()
             .ConstructUsing(id => new GetSaleQuery(id));
 
-        CreateMap<SaleItem, SaleItemResponse>();
-
         CreateMap<GetSaleItemResult, SaleItemResponse>()
-           .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
            .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
-           .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductName))
-           .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+           .ForPath(dest => dest.ProductDetails.Title, opt => opt.MapFrom(src => src.ProductDetails.Title))
+           .ForPath(dest => dest.ProductDetails.Category, opt => opt.MapFrom(src => src.ProductDetails.Category))
+           .ForPath(dest => dest.ProductDetails.Image, opt => opt.MapFrom(src => src.ProductDetails.Image))
            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
            .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.Discount))
            .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+           .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
 
@@ -44,5 +43,7 @@ public class GetSaleProfile : Profile
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
             .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
+
+        CreateMap<ProductDetailsResult, ProductDetailsResponse>();
     }
 }

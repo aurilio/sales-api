@@ -20,8 +20,7 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
 
         RuleFor(x => x.CustomerId)
             .NotEmpty()
-            .WithMessage("Customer ID is required.")
-            .Must(BeAValidGuid).WithMessage("Customer ID must be a valid GUID.");
+            .WithMessage("Customer ID is required.");
 
         RuleFor(x => x.CustomerName)
             .NotEmpty()
@@ -39,14 +38,5 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
             .NotEmpty()
             .WithMessage("Sale must have at least one item.")
             .ForEach(items => items.SetValidator(new CreateSaleItemCommandValidator()));
-
-        RuleFor(x => x.IsCancelled)
-            .NotNull()
-            .WithMessage("IsCancelled must be specified.");
-    }
-
-    private bool BeAValidGuid(Guid customerId)
-    {
-        return customerId != Guid.Empty;
     }
 }

@@ -13,5 +13,5 @@ public class Customer
     /// <summary>
     /// The full name of the customer.
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 }

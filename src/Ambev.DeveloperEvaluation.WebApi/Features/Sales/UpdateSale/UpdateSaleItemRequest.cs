@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
+using System.ComponentModel.DataAnnotations;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 
@@ -7,26 +8,17 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 /// </summary>
 public class UpdateSaleItemRequest
 {
-    /// <summary>
-    /// The external identifier of the product.
-    /// </summary>
     [Required]
-    public required string ProductId { get; set; }
+    public Guid ProductId { get; set; }
 
     /// <summary>
-    /// The quantity of the product sold.
+    /// The quantity of the product.
     /// </summary>
     [Range(1, 20)]
-    public int? Quantity { get; set; }
+    public int Quantity { get; set; }
 
     /// <summary>
-    /// The unit price of the product at the time of sale.
+    /// The product details at the time of the sale.
     /// </summary>
-    [Range(0.01, double.MaxValue)]
-    public decimal? UnitPrice { get; set; }
-
-    /// <summary>
-    /// The discount applied to this item (if any).
-    /// </summary>
-    public decimal? Discount { get; set; }
+    public ProductDetailsRequest ProductDetails { get; set; } = new();
 }

@@ -6,7 +6,7 @@
 public class DeleteSaleResponse
 {
     /// <summary>
-    /// Indicates whether the deletion was successful
+    /// Message indicating successful deletion
     /// </summary>
-    public bool Success { get; set; }
+    public string Message { get; set; } = "Sale deleted successfully";
 }

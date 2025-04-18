@@ -1,7 +1,8 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Repositories;
+﻿using Ambev.DeveloperEvaluation.Common.Exceptions;
+using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
-using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 
@@ -12,16 +13,19 @@ public class GetSaleHandler : IRequestHandler<GetSaleQuery, GetSaleResult>
 {
     private readonly ISaleRepository _saleReadRepository;
     private readonly IMapper _mapper;
+    private readonly ILogger<GetSaleHandler> _logger;
 
     /// <summary>
     /// Initializes a new instance of GetSaleHandler
     /// </summary>
     /// <param name="saleReadRepository">The sale read repository</param>
     /// <param name="mapper">The AutoMapper instance</param>
-    public GetSaleHandler(ISaleRepository saleReadRepository, IMapper mapper)
+    /// <param name="logger">The logger instance</param>
+    public GetSaleHandler(ISaleRepository saleReadRepository, IMapper mapper, ILogger<GetSaleHandler> logger)
     {
         _saleReadRepository = saleReadRepository;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
@@ -32,17 +36,20 @@ public class GetSaleHandler : IRequestHandler<GetSaleQuery, GetSaleResult>
     /// <returns>The sale details if found</returns>
     public async Task<GetSaleResult> Handle(GetSaleQuery request, CancellationToken cancellationToken)
     {
-        var validator = new GetSaleQueryValidator();
-        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        _logger.LogInformation("Starting GetSaleQuery handler for SaleId: {SaleId}", request.Id);
 
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
-
+        _logger.LogDebug("Fetching sale with ID: {SaleId}", request.Id);
         var sale = await _saleReadRepository.GetByIdAsync(request.Id, cancellationToken);
 
         if (sale == null)
-            throw new KeyNotFoundException($"Venda com ID {request.Id} não encontrada.");
+        {
+            _logger.LogWarning("Sale with ID {SaleId} not found.", request.Id);
+            throw new NotFoundException("Sale", request.Id);
+        }
 
-        return _mapper.Map<GetSaleResult>(sale);
+        _logger.LogInformation("Successfully retrieved sale with ID: {SaleId}", request.Id);
+        var result = _mapper.Map<GetSaleResult>(sale);
+
+        return result;
     }
 }

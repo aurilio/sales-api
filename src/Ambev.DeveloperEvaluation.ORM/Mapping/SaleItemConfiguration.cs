@@ -15,37 +15,20 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
             .HasColumnType("uuid")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property(si => si.SaleId)
+        builder.Property<Guid>("SaleId")
             .IsRequired()
             .HasColumnType("uuid");
 
-        builder.HasOne(si => si.Sale)
-            .WithMany(s => s.Items)
-            .HasForeignKey(si => si.SaleId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Mapeamento da chave estrangeira para Product (External Identity)
         builder.Property(si => si.ProductId)
             .IsRequired()
-            .HasColumnType("integer");
-
-        // Mapeamento das propriedades denormalizadas do Product
-        builder.Property(si => si.ProductName)
-            .IsRequired()
-            .HasMaxLength(255);
+            .HasColumnType("uuid");
 
         builder.Property(si => si.Quantity)
-            .IsRequired()
-            .HasColumnType("integer");
-
-        builder.Property(si => si.UnitPrice)
-            .IsRequired()
-            .HasColumnType("numeric");
+            .IsRequired();
 
         builder.Property(si => si.Discount)
             .IsRequired()
-            .HasColumnType("numeric")
-            .HasDefaultValue(0);
+            .HasColumnType("numeric");
 
         builder.Property(si => si.TotalAmount)
             .IsRequired()
@@ -58,5 +41,26 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
 
         builder.Property(si => si.UpdatedAt)
             .HasColumnType("timestamp with time zone");
+
+        builder.OwnsOne(si => si.ProductDetails, pd =>
+        {
+            pd.Property(p => p.Title)
+              .HasColumnName("ProductTitle")
+              .HasMaxLength(255)
+              .IsRequired();
+
+            pd.Property(p => p.Category)
+              .HasColumnName("ProductCategory")
+              .HasMaxLength(100)
+              .IsRequired();
+
+            pd.Property(p => p.Price)
+              .HasColumnName("ProductPrice")
+              .IsRequired();
+
+            pd.Property(p => p.Image)
+              .HasColumnName("ProductImage")
+              .IsRequired();
+        });
     }
 }

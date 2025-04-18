@@ -8,26 +8,18 @@ public class UpdateSaleItemCommandValidator : AbstractValidator<UpdateSaleItemCo
     {
         RuleFor(x => x.ProductId)
             .NotEmpty()
-            .WithMessage("Product ID is required for each item.")
-            .MaximumLength(50)
-            .WithMessage("Product ID cannot exceed 50 characters for each item.")
-            .When(x => x.ProductId != null);
+            .WithMessage("ProductId is required.");
 
         RuleFor(x => x.Quantity)
             .GreaterThan(0)
-            .WithMessage("Quantity must be greater than zero for each item.")
-            .LessThanOrEqualTo(20)
-            .WithMessage("Quantity cannot exceed 20 for each item.")
-            .When(x => x.Quantity.HasValue);
+            .WithMessage("Quantity must be greater than zero.");
 
-        RuleFor(x => x.UnitPrice)
+        RuleFor(x => x.ProductDetails)
+            .NotNull()
+            .WithMessage("Product details are required.");
+
+        RuleFor(x => x.ProductDetails.Price)
             .GreaterThan(0)
-            .WithMessage("Unit price must be greater than zero for each item.")
-            .When(x => x.UnitPrice.HasValue);
-
-        RuleFor(x => x.Discount)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage("Discount cannot be negative for each item.")
-            .When(x => x.Discount.HasValue);
+            .WithMessage("Product price must be greater than zero.");
     }
 }

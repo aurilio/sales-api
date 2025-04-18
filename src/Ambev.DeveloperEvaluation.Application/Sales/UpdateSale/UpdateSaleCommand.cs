@@ -21,12 +21,12 @@ public class UpdateSaleCommand : IRequest<UpdateSaleResult>
     /// <summary>
     /// The date when the sale was made.
     /// </summary>
-    public DateTime? SaleDate { get; set; }
+    public DateTime SaleDate { get; set; }
 
     /// <summary>
     /// Information about the customer (external identifier).
     /// </summary>
-    public Guid? CustomerId { get; set; }
+    public Guid CustomerId { get; set; }
 
     /// <summary>
     /// The denormalized name of the customer.
@@ -36,7 +36,7 @@ public class UpdateSaleCommand : IRequest<UpdateSaleResult>
     /// <summary>
     /// The total amount of the sale.
     /// </summary>
-    public decimal? TotalAmount { get; set; }
+    public decimal TotalAmount { get; set; }
 
     /// <summary>
     /// The branch where the sale was made.
@@ -44,15 +44,18 @@ public class UpdateSaleCommand : IRequest<UpdateSaleResult>
     public string Branch { get; set; } = string.Empty;
 
     /// <summary>
-    /// A list of products included in the sale.
-    /// </summary>
-    public List<UpdateSaleItemCommand> Items { get; set; } = new List<UpdateSaleItemCommand>();
-
-    /// <summary>
     /// Indicates if the sale is cancelled or not.
     /// </summary>
-    public bool? IsCancelled { get; set; }
+    public bool IsCancelled { get; set; }
 
+    /// <summary>
+    /// A list of products included in the sale.
+    /// </summary>
+    public List<UpdateSaleItemCommand> Items { get; set; } = new ();
+
+    /// <summary>
+    /// Validates the command.
+    /// </summary>
     public ValidationResultDetail Validate()
     {
         var validator = new UpdateSaleCommandValidator();

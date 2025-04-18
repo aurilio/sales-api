@@ -39,10 +39,6 @@ public class CreateSaleRequestValidator : AbstractValidator<CreateSaleRequest>
             .NotEmpty()
             .WithMessage("Sale must have at least one item.")
             .ForEach(items => items.SetValidator(new SaleItemRequestValidator()));
-
-        RuleFor(x => x.IsCancelled)
-            .NotNull()
-            .WithMessage("IsCancelled must be specified.");
     }
 
     private bool BeAValidGuid(Guid customerId)

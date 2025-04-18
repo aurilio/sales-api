@@ -43,11 +43,6 @@ public class GetSaleResponse
     public string Branch { get; set; } = string.Empty;
 
     /// <summary>
-    /// A list of items included in the sale.
-    /// </summary>
-    public List<SaleItemResponse> Items { get; set; } = new List<SaleItemResponse>();
-
-    /// <summary>
     /// Indicates if the sale is cancelled or not.
     /// </summary>
     public bool IsCancelled { get; set; }
@@ -61,4 +56,9 @@ public class GetSaleResponse
     /// Gets the date and time of the last update to the sale's information.
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// A list of items included in the sale.
+    /// </summary>
+    public List<SaleItemResponse> Items { get; set; } = new ();
 }

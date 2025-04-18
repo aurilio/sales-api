@@ -23,7 +23,7 @@ public class CreateSaleResponse
     /// <summary>
     /// The external identifier of the customer.
     /// </summary>
-    public string CustomerId { get; set; } = string.Empty;
+    public Guid CustomerId { get; set; }
 
     /// <summary>
     /// The denormalized name of the customer.
@@ -41,11 +41,6 @@ public class CreateSaleResponse
     public string Branch { get; set; } = string.Empty;
 
     /// <summary>
-    /// A list of items included in the sale.
-    /// </summary>
-    public List<SaleItemResponse> Items { get; set; } = new List<SaleItemResponse>();
-
-    /// <summary>
     /// Indicates if the sale is cancelled or not.
     /// </summary>
     public bool IsCancelled { get; set; }
@@ -59,4 +54,9 @@ public class CreateSaleResponse
     /// Gets the date and time of the last update to the sale's information.
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// A list of items included in the sale.
+    /// </summary>
+    public List<SaleItemResponse> Items { get; set; } = new();
 }

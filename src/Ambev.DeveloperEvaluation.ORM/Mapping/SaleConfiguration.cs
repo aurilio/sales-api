@@ -1,11 +1,6 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Ambev.DeveloperEvaluation.ORM.Mapping;
 
@@ -28,19 +23,13 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
             .IsRequired()
             .HasColumnType("timestamp with time zone");
 
-        // Mapeamento da chave estrangeira para Customer (External Identity)
         builder.Property(s => s.CustomerId)
             .IsRequired()
             .HasColumnType("uuid");
 
-        // Mapeamento da propriedade denormalizada CustomerName
         builder.Property(s => s.CustomerName)
             .IsRequired()
             .HasMaxLength(255);
-
-        builder.Property(s => s.TotalAmount)
-            .IsRequired()
-            .HasColumnType("numeric");
 
         builder.Property(s => s.Branch)
             .HasMaxLength(100);
@@ -57,9 +46,13 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.Property(s => s.UpdatedAt)
             .HasColumnType("timestamp with time zone");
 
+        builder.Property(s => s.TotalAmount)
+            .IsRequired()
+            .HasColumnType("numeric(18,2)");
+
         builder.HasMany(s => s.Items)
-            .WithOne(si => si.Sale)
-            .HasForeignKey(si => si.SaleId)
+            .WithOne()
+            .HasForeignKey("SaleId")
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

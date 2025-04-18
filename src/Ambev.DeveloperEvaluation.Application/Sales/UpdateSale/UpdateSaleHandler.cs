@@ -1,8 +1,9 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Entities;
+﻿using Ambev.DeveloperEvaluation.Common.Exceptions;
+using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
-using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
@@ -13,16 +14,19 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly ILogger<UpdateSaleHandler> _logger;
 
     /// <summary>
-    /// Initializes a new instance of UpdateSaleHandler
+    /// Initializes a new instance of <see cref="UpdateSaleHandler"/>.
     /// </summary>
-    /// <param name="saleRepository">The sale repository</param>
-    /// <param name="mapper">The AutoMapper instance</param>
-    public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    /// <param name="saleRepository">The sale repository.</param>
+    /// <param name="mapper">The AutoMapper instance.</param>
+    /// <param name="logger">The logger instance.</param>
+    public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper, ILogger<UpdateSaleHandler> logger)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
@@ -33,36 +37,37 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
     /// <returns>The result of the update operation</returns>
     public async Task<UpdateSaleResult> Handle(UpdateSaleCommand command, CancellationToken cancellationToken)
     {
-        var validator = new UpdateSaleCommandValidator();
-        var validationResult = await validator.ValidateAsync(command, cancellationToken);
+        _logger.LogInformation("Starting UpdateSaleCommand handler for Sale ID: {SaleId}", command.Id);
 
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
-        //TODO: não trouxe os itens
-        var saleToUpdate = await _saleRepository.GetByIdAsync(command.Id);
+        var saleToUpdate = await _saleRepository.GetByIdAsync(command.Id, cancellationToken);
 
         if (saleToUpdate == null)
-            throw new KeyNotFoundException($"Venda com ID {command.Id} não encontrada.");
-
-        _mapper.Map(command, saleToUpdate);
-        saleToUpdate.UpdateUpdatedAt();
-
-        if (command.Items != null)
         {
-            saleToUpdate.Items.Clear();
-            foreach (var itemCommand in command.Items)
-            {
-                var saleItem = _mapper.Map<SaleItem>(itemCommand);
-                saleToUpdate.AddItem(saleItem);
-            }
-        }
-        else
-        {
-            //TODO: Se não houver itens no comando de atualização, garantir que o TotalAmount seja recalculado
+            _logger.LogWarning("Sale with ID {SaleId} not found.", command.Id);
+            throw new NotFoundException("Sale", command.Id);
         }
 
-        var response = await _saleRepository.UpdateAsync(saleToUpdate);
+        _logger.LogDebug("Mapping sale items...");
+        var saleItems = command.Items
+            .Select(itemCommand => _mapper.Map<SaleItem>(itemCommand))
+            .ToList();
 
-        return new UpdateSaleResult { Sale = response };
+        _logger.LogDebug("Updating sale aggregate...");
+        saleToUpdate.UpdateSale(
+            command.SaleNumber,
+            command.SaleDate,
+            command.CustomerId,
+            command.CustomerName,
+            command.Branch,
+            command.IsCancelled,
+            saleItems
+        );
+
+        _logger.LogDebug("Persisting updated sale to repository...");
+        var updatedSale = await _saleRepository.UpdateAsync(saleToUpdate, cancellationToken);
+
+        _logger.LogInformation("Sale updated successfully with ID: {SaleId}", updatedSale.Id);
+
+        return _mapper.Map<UpdateSaleResult>(updatedSale);
     }
 }

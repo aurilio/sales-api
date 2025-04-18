@@ -17,6 +17,9 @@ public class BaseController : ControllerBase
     protected IActionResult Ok<T>(T data) =>
             base.Ok(new ApiResponseWithData<T> { Data = data, Success = true });
 
+    protected IActionResult OkPlane<T>(T data) =>
+        base.Ok(data);
+
     protected IActionResult Created<T>(string routeName, object routeValues, T data, string? message = null) =>
         base.CreatedAtRoute(routeName, routeValues, new ApiResponseWithData<T> { Data = data, Success = true, Message = message ?? $"{typeof(T).Name.Replace("Response", "")} created successfully" });
 
@@ -32,7 +35,16 @@ public class BaseController : ControllerBase
                 Data = pagedList,
                 CurrentPage = pagedList.CurrentPage,
                 TotalPages = pagedList.TotalPages,
-                TotalCount = pagedList.TotalCount,
-                Success = true
+                TotalItems = pagedList.TotalCount,
             });
+    protected IActionResult Paginated<T>(IEnumerable<T> data, int totalItems, int currentPage, int totalPages)
+    {
+        return base.Ok(new
+        {
+            data,
+            totalItems,
+            currentPage,
+            totalPages
+        });
+    }
 }

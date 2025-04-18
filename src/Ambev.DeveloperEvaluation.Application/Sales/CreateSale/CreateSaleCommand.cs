@@ -9,49 +9,44 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 public class CreateSaleCommand : IRequest<CreateSaleResult>
 {
     /// <summary>
-    /// The number of the sale.
+    /// Gets or sets the unique number of the sale.
     /// </summary>
     public string SaleNumber { get; set; } = string.Empty;
 
     /// <summary>
-    /// The date when the sale was made.
+    /// Gets or sets the date when the sale occurred.
     /// </summary>
     public DateTime SaleDate { get; set; }
 
     /// <summary>
-    /// Information about the customer (external identifier).
+    /// Gets or sets the external identifier of the customer.
     /// </summary>
     public Guid CustomerId { get; set; }
 
     /// <summary>
-    /// The denormalized name of the customer.
+    /// Gets or sets the denormalized name of the customer.
     /// </summary>
     public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The total amount of the sale.
-    /// </summary>
-    public decimal TotalAmount { get; set; }
-
-    /// <summary>
-    /// The branch where the sale was made.
+    /// Gets or sets the branch where the sale was made.
     /// </summary>
     public string Branch { get; set; } = string.Empty;
 
     /// <summary>
-    /// A list of products included in the sale.
+    /// Gets or sets the list of items included in the sale.
     /// </summary>
-    public List<CreateSaleItemCommand> Items { get; set; } = new List<CreateSaleItemCommand>();
+    public List<CreateSaleItemCommand> Items { get; set; } = new();
 
     /// <summary>
-    /// Indicates if the sale is cancelled or not.
+    /// Executes validation rules for the command using <see cref="CreateSaleCommandValidator"/>.
     /// </summary>
-    public bool IsCancelled { get; set; } = false;
-
+    /// <returns>A detailed validation result.</returns>
     public ValidationResultDetail Validate()
     {
         var validator = new CreateSaleCommandValidator();
         var result = validator.Validate(this);
+
         return new ValidationResultDetail
         {
             IsValid = result.IsValid,
