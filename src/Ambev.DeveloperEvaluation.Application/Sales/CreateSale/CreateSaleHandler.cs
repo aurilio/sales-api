@@ -1,8 +1,8 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
-using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 
@@ -13,48 +13,59 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly ILogger<CreateSaleHandler> _logger;
 
     /// <summary>
-    /// Initializes a new instance of CreateSaleHandler
+    /// Initializes a new instance of CreateSaleHandler.
     /// </summary>
-    /// <param name="saleRepository">The sale repository</param>
-    /// <param name="mapper">The AutoMapper instance</param>
-    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    /// <param name="saleRepository">The sale repository.</param>
+    /// <param name="mapper">The AutoMapper instance.</param>
+    /// <param name="logger">Logger instance for logging operations.</param>
+    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper, ILogger<CreateSaleHandler> logger)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Handles the CreateSaleCommand request
+    /// Handles the CreateSaleCommand request.
     /// </summary>
-    /// <param name="command">The CreateSale command</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The result of the sale creation</returns>
+    /// <param name="command">The CreateSale command.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The result of the sale creation.</returns>
     public async Task<CreateSaleResult> Handle(CreateSaleCommand command, CancellationToken cancellationToken)
     {
-        var validator = new CreateSaleCommandValidator();
-        var validationResult = await validator.ValidateAsync(command, cancellationToken);
+        _logger.LogInformation("Handling CreateSaleCommand for SaleNumber: {SaleNumber}", command.SaleNumber);
 
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
+        var saleItems = MapSaleItems(command);
+        var sale = BuildSale(command, saleItems);
 
-        var sale = _mapper.Map<Sale>(command);
-        sale.Items.Clear();
-        //TODO: melhorar lógica
-        if (command.Items != null && command.Items.Any())
-        {
-            foreach (var itemCommand in command.Items)
-            {
-                var saleItem = _mapper.Map<SaleItem>(itemCommand);
-                sale.AddItem(saleItem);
-            }
-        }
+        _logger.LogDebug("Saving sale to repository.");
+        var savedSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
-        var createdUser = await _saleRepository.CreateAsync(sale, cancellationToken);
-        //TODO: mapper está perdendo itens
-        var result = _mapper.Map<CreateSaleResult>(createdUser);
+        var result = _mapper.Map<CreateSaleResult>(savedSale);
 
+        _logger.LogInformation("Sale created successfully. ID: {SaleId}", result.Id);
         return result;
+    }
+
+    private static List<SaleItem> MapSaleItems(CreateSaleCommand command)
+    {
+        return command.Items
+            .Select(item => new SaleItem(item.ProductId, item.Quantity, item.ProductDetails))
+            .ToList();
+    }
+
+    private static Sale BuildSale(CreateSaleCommand command, List<SaleItem> saleItems)
+    {
+        return new Sale(
+            saleNumber: command.SaleNumber,
+            saleDate: command.SaleDate,
+            customerId: command.CustomerId,
+            customerName: command.CustomerName,
+            branch: command.Branch,
+            items: saleItems
+        );
     }
 }

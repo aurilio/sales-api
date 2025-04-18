@@ -2,32 +2,32 @@
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 
+/// <summary>
+/// Validator for <see cref="UpdateSaleItemRequest"/>, validating each item within a sale update request.
+/// </summary>
 public class UpdateSaleItemRequestValidator : AbstractValidator<UpdateSaleItemRequest>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateSaleItemRequestValidator"/> class.
+    /// </summary>
     public UpdateSaleItemRequestValidator()
     {
         RuleFor(x => x.ProductId)
-            .NotEmpty()
-            .WithMessage("Product ID is required for each item.")
-            .MaximumLength(50)
-            .WithMessage("Product ID cannot exceed 50 characters for each item.")
-            .When(x => x.ProductId != null);
+            .NotEmpty().WithMessage("Product ID is required.");
 
         RuleFor(x => x.Quantity)
-            .GreaterThan(0)
-            .WithMessage("Quantity must be greater than zero for each item.")
-            .LessThanOrEqualTo(20)
-            .WithMessage("Quantity cannot exceed 20 for each item.")
-            .When(x => x.Quantity.HasValue);
+            .GreaterThan(0).WithMessage("Quantity must be greater than zero.")
+            .LessThanOrEqualTo(20).WithMessage("Quantity cannot exceed 20.");
 
-        RuleFor(x => x.UnitPrice)
-            .GreaterThan(0)
-            .WithMessage("Unit price must be greater than zero for each item.")
-            .When(x => x.UnitPrice.HasValue);
+        RuleFor(x => x.ProductDetails.Title)
+            .NotEmpty().WithMessage("Product title is required.")
+            .MaximumLength(255);
 
-        RuleFor(x => x.Discount)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage("Discount cannot be negative for each item.")
-            .When(x => x.Discount.HasValue);
+        RuleFor(x => x.ProductDetails.Category)
+            .NotEmpty().WithMessage("Category is required.")
+            .MaximumLength(100);
+
+        RuleFor(x => x.ProductDetails.Image)
+            .NotEmpty().WithMessage("Product image is required.");
     }
 }

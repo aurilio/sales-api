@@ -5,131 +5,135 @@ using Ambev.DeveloperEvaluation.Domain.Validation;
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
 
 /// <summary>
-/// Represents a sale record in the system.
-/// This entity follows domain-driven design principles and includes business rules validation.
+/// Represents a sale transaction in the system, including customer, items, and metadata.
 /// </summary>
 public class Sale : BaseEntity
 {
     /// <summary>
-    /// The unique number or identifier for the sale.
-    /// Must not be null or empty and should have a valid format if applicable.
+    /// Unique identifier code for the sale.
     /// </summary>
-    public string SaleNumber { get; set; } = string.Empty;
+    public string SaleNumber { get; set; }
 
     /// <summary>
-    /// The date when the sale occurred.
-    /// Must be a valid past or current date.
+    /// Date when the sale was made.
     /// </summary>
     public DateTime SaleDate { get; set; }
 
     /// <summary>
-    /// The external identifier of the customer who made the sale.
+    /// Identifier of the customer who made the purchase.
     /// </summary>
     public Guid CustomerId { get; set; }
 
     /// <summary>
-    /// The denormalized name of the customer.
+    /// Denormalized name of the customer (for reporting or display).
     /// </summary>
-    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerName { get; set; }
 
     /// <summary>
-    /// The total amount of the sale.
-    /// Must be greater than zero.
+    /// Total value of the sale, automatically calculated from items.
     /// </summary>
     public decimal TotalAmount { get; private set; }
 
     /// <summary>
-    /// The branch where the sale was made.
+    /// Branch or store where the sale took place.
     /// </summary>
-    public string Branch { get; set; } = string.Empty;
+    public string Branch { get; set; }
 
     /// <summary>
     /// Indicates whether the sale has been cancelled.
-    /// Defaults to false.
     /// </summary>
-    public bool IsCancelled { get; set; } = false;
+    public bool IsCancelled { get; private set; } = false;
 
     /// <summary>
-    /// The collection of items included in this sale.
-    /// Must not be null and should contain at least one item for a valid sale.
-    /// </summary>
-    public IList<SaleItem> Items { get; set; } = new List<SaleItem>();
-
-    /// <summary>
-    /// Gets the date and time when the sale record was created.
+    /// Date and time when this sale was created.
     /// </summary>
     public DateTime CreatedAt { get; private set; }
 
     /// <summary>
-    /// Gets the date and time of the last update to the sale's information.
+    /// Date and time when the sale was last updated.
     /// </summary>
     public DateTime? UpdatedAt { get; private set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Sale"/> class.
-    /// Sets the creation timestamp.
+    /// Items included in this sale.
     /// </summary>
-    public Sale()
-    {
-        CreatedAt = DateTime.UtcNow;
-    }
+    private readonly List<SaleItem> _items = new();
+    public IReadOnlyCollection<SaleItem> Items => _items;
 
     /// <summary>
-    /// Adds a new item to the sale and recalculates the total amount.
+    /// Constructor for Entity Framework.
     /// </summary>
-    /// <param name="item">The <see cref="SaleItem"/> to add.</param>
-    public void AddItem(SaleItem item)
+    protected Sale() { }
+
+    /// <summary>
+    /// Initializes a new sale instance with required information and items.
+    /// </summary>
+    /// <param name="saleNumber">Sale code or identifier.</param>
+    /// <param name="saleDate">Date of the sale.</param>
+    /// <param name="customerId">Customer’s unique identifier.</param>
+    /// <param name="branch">Branch name where the sale occurred.</param>
+    /// <param name="items">List of products included in the sale.</param>
+    public Sale(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch, IEnumerable<SaleItem> items)
     {
-        if (item == null)
-        {
-            throw new ArgumentNullException(nameof(item), "Sale item cannot be null.");
-        }
-        Items.Add(item);
+        ValidateSaleInputs(saleNumber, customerId, branch, items);
+        SetValues(saleNumber, saleDate, customerId, customerName, branch, items);
+
+        CreatedAt = DateTime.UtcNow;
+        _items.AddRange(items);
         CalculateTotalAmount();
     }
 
-    /// <summary>
-    /// Removes an item from the sale and recalculates the total amount.
-    /// </summary>
-    /// <param name="item">The <see cref="SaleItem"/> to remove.</param>
-    /// <returns>True if the item was successfully removed; otherwise, false.</returns>
-    public bool RemoveItem(SaleItem item)
+    private void SetValues(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch, IEnumerable<SaleItem> items)
     {
-        var removed = Items.Remove(item);
-        if (removed)
-        {
-            CalculateTotalAmount();
-        }
-        return removed;
+        SaleNumber = saleNumber;
+        SaleDate = saleDate;
+        CustomerId = customerId;
+        CustomerName = customerName;
+        Branch = branch;
     }
 
     /// <summary>
-    /// Recalculates the total amount of the sale based on the current items.
+    /// Updates the basic information of the sale such as number, date, customer, and branch.
+    /// Automatically updates the <see cref="UpdatedAt"/> timestamp.
     /// </summary>
-    private void CalculateTotalAmount()
+    /// <param name="saleNumber">The updated sale number.</param>
+    /// <param name="saleDate">The updated sale date.</param>
+    /// <param name="customerId">The updated customer ID.</param>
+    /// <param name="customerName">The updated customer name.</param>
+    /// <param name="branch">The updated branch where the sale occurred.</param>
+    public void UpdateSale(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch, bool isCancelled, IEnumerable<SaleItem> items)
     {
-        TotalAmount = Items.Sum(item => item.TotalAmount);
+        ValidateSaleInputs(saleNumber, customerId, branch, items);
+        SetValues(saleNumber, saleDate, customerId, customerName, branch, items);
+
+        if (isCancelled)
+            IsCancelled = true;
+
+        ReplaceItems(items);
         UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
-    /// Performs validation of the sale entity using the <see cref="SaleValidator"/> rules.
+    /// Replaces all existing sale items with a new list and recalculates the total amount.
+    /// This is typically used during updates where the full item list is replaced.
     /// </summary>
-    /// <returns>
-    /// A <see cref="ValidationResultDetail"/> containing:
-    /// - IsValid: Indicates whether all validation rules passed
-    /// - Errors: Collection of validation errors if any rules failed
-    /// </returns>
-    /// <remarks>
-    /// <listheader>The validation includes checking:</listheader>
-    /// <list type="bullet">SaleNumber format and length</list>
-    /// <list type="bullet">SaleDate validity (not in the future)</list>
-    /// <list type="bullet">CustomerId not null or empty</list>
-    /// <list type="bullet">TotalAmount greater than zero</list>
-    /// <list type="bullet">BranchId not null or empty</list>
-    /// <list type="bullet">Items collection not null and not empty</list>
-    /// <list type="bullet">Validation of each <see cref="SaleItem"/> in the <see cref="Items"/> collection</list>
-    /// </remarks>
+    /// <param name="items">The new list of sale items.</param>
+    /// <exception cref="DomainException">Thrown if the newItems list is null or empty.</exception>
+    public void ReplaceItems(IEnumerable<SaleItem> updatedItems)
+    {
+        if (updatedItems == null || !updatedItems.Any())
+            throw new DomainException("A sale must have at least one item.");
+
+        _items.Clear();
+        _items.AddRange(updatedItems);
+
+        CalculateTotalAmount();
+    }
+
+    /// <summary>
+    /// Validates the sale and its items using defined rules.
+    /// </summary>
+    /// <returns>Result of the validation process.</returns>
     public ValidationResultDetail Validate()
     {
         var validator = new SaleValidator();
@@ -142,7 +146,10 @@ public class Sale : BaseEntity
             {
                 foreach (var error in itemValidationResult.Errors)
                 {
-                    result.Errors.Add(new FluentValidation.Results.ValidationFailure($"Items[{Items.IndexOf(item)}].{error.Error}", error.Detail));
+                    result.Errors.Add(new FluentValidation.Results.ValidationFailure(
+                        $"Items[{Items.ToList().IndexOf(item)}].{error.Error}",
+                        error.Detail
+                    ));
                 }
             }
         }
@@ -150,22 +157,30 @@ public class Sale : BaseEntity
         return new ValidationResultDetail
         {
             IsValid = result.IsValid && !result.Errors.Any(),
-            Errors = result.Errors.Select(o => (ValidationErrorDetail)o).ToList()
+            Errors = result.Errors.Select(e => (ValidationErrorDetail)e).ToList()
         };
     }
 
     /// <summary>
-    /// Marks the sale as cancelled.
-    /// Sets the <see cref="IsCancelled"/> flag to true and updates the <see cref="UpdatedAt"/> timestamp.
+    /// Recalculates the total amount based on all items and updates the last modified timestamp.
     /// </summary>
-    public void Cancel()
+    private void CalculateTotalAmount()
     {
-        IsCancelled = true;
-        UpdatedAt = DateTime.UtcNow;
+        TotalAmount = _items.Sum(i => i.TotalAmount);
     }
 
-    public void UpdateUpdatedAt()
+    private static void ValidateSaleInputs(string saleNumber, Guid customerId, string branch, IEnumerable<SaleItem> items)
     {
-        UpdatedAt = DateTime.UtcNow;
+        if (string.IsNullOrWhiteSpace(saleNumber))
+            throw new ArgumentException("Sale number is required.", nameof(saleNumber));
+
+        if (customerId == Guid.Empty)
+            throw new ArgumentException("CustomerId is required.", nameof(customerId));
+
+        if (string.IsNullOrWhiteSpace(branch))
+            throw new ArgumentException("Branch is required.", nameof(branch));
+
+        if (items == null || !items.Any())
+            throw new DomainException("A sale must have at least one item.");
     }
 }

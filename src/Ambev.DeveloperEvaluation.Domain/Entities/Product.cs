@@ -13,7 +13,7 @@ public class Product
     /// <summary>
     /// The title or name of the product.
     /// </summary>
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// The price of the product.
@@ -23,20 +23,20 @@ public class Product
     /// <summary>
     /// A brief description of the product.
     /// </summary>
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     /// The category the product belongs to.
     /// </summary>
-    public string Category { get; set; }
+    public string Category { get; set; } = string.Empty;
 
     /// <summary>
     /// URL or path to the product's image.
     /// </summary>
-    public string Image { get; set; }
+    public string Image { get; set; } = string.Empty;
 
     /// <summary>
     /// The rating details of the product.
     /// </summary>
-    public Rating Rating { get; set; }
+    public Rating Rating { get; set; } = new ();
 }

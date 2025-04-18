@@ -1,6 +1,7 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Repositories;
-using FluentValidation;
+﻿using Ambev.DeveloperEvaluation.Common.Exceptions;
+using Ambev.DeveloperEvaluation.Domain.Repositories;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 
@@ -10,14 +11,16 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 public class DeleteSaleHandler : IRequestHandler<DeleteSaleCommand, DeleteSaleResponse>
 {
     private readonly ISaleRepository _saleRepository;
+    private readonly ILogger<DeleteSaleHandler> _logger;
 
     /// <summary>
     /// Initializes a new instance of DeleteSaleHandler
     /// </summary>
     /// <param name="saleRepository">The sale repository</param>
-    public DeleteSaleHandler(ISaleRepository saleRepository)
+    public DeleteSaleHandler(ISaleRepository saleRepository, ILogger<DeleteSaleHandler> logger)
     {
         _saleRepository = saleRepository;
+        _logger = logger;
     }
 
     /// <summary>
@@ -28,17 +31,18 @@ public class DeleteSaleHandler : IRequestHandler<DeleteSaleCommand, DeleteSaleRe
     /// <returns>The result of the delete operation</returns>
     public async Task<DeleteSaleResponse> Handle(DeleteSaleCommand request, CancellationToken cancellationToken)
     {
-        var validator = new DeleteSaleCommandValidator();
-        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        _logger.LogInformation("Starting DeleteSaleCommand handler for SaleId: {SaleId}", request.Id);
 
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
-
+        _logger.LogDebug("Attempting to delete sale with ID: {SaleId}", request.Id);
         var success = await _saleRepository.DeleteAsync(request.Id, cancellationToken);
 
         if (!success)
-            throw new KeyNotFoundException($"Venda com ID {request.Id} não encontrada.");
+        {
+            _logger.LogWarning("Sale with ID {SaleId} was not found.", request.Id);
+            throw new NotFoundException("Sale", request.Id);
+        }
 
-        return new DeleteSaleResponse { Success = true };
+        _logger.LogInformation("Sale with ID {SaleId} successfully deleted.", request.Id);
+        return new DeleteSaleResponse { Message = $"Sale with ID {request.Id} was deleted successfully" };
     }
 }

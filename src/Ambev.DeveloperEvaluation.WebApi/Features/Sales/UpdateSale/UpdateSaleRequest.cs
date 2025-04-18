@@ -8,37 +8,41 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 public class UpdateSaleRequest
 {
     /// <summary>
-    /// The number of the sale.
+    /// Updated sale number.
     /// </summary>
+    [Required]
     public string SaleNumber { get; set; } = string.Empty;
 
     /// <summary>
-    /// The date when the sale was made.
+    /// Updated date when the sale was made.
     /// </summary>
-    public DateTime? SaleDate { get; set; }
+    [Required]
+    public DateTime SaleDate { get; set; }
 
     /// <summary>
-    /// Information about the customer (external identifier).
+    /// Updated identifier of the customer.
     /// </summary>
-    public Guid? CustomerId { get; set; }
+    [Required]
+    public Guid CustomerId { get; set; }
 
     /// <summary>
-    /// The denormalized name of the customer.
+    /// Updated name of the customer.
     /// </summary>
-    public string? CustomerName { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The branch where the sale was made.
+    /// Updated branch name where the sale occurred.
     /// </summary>
+    [Required]
     public string Branch { get; set; } = string.Empty;
-
-    /// <summary>
-    /// A list of products included in the sale.
-    /// </summary>
-    public List<UpdateSaleItemRequest> Items { get; set; } = new List<UpdateSaleItemRequest>();
 
     /// <summary>
     /// Indicates if the sale is cancelled or not.
     /// </summary>
     public bool? IsCancelled { get; set; }
+
+    /// <summary>
+    /// A list of products included in the sale.
+    /// </summary>
+    public List<UpdateSaleItemRequest> Items { get; set; } = new ();
 }

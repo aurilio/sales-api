@@ -6,8 +6,10 @@ using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.IoC;
 using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
+using Ambev.DeveloperEvaluation.WebApi.Swagger;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Polly;
 using Serilog;
 
@@ -20,7 +22,7 @@ public class Program
         try
         {
             Log.Information("Starting web application");
-            
+
             foreach (var envVar in Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>())
             {
                 Log.Information($"Environment Variable: {envVar.Key} = {envVar.Value}");
@@ -33,7 +35,27 @@ public class Program
             builder.Services.AddEndpointsApiExplorer();
 
             builder.AddBasicHealthChecks();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Ambev Developer Evaluation API",
+                    Version = "v1",
+                    //Version = "1.0.0",
+                    //Version = "3.0.1",
+                    Description = "API para gerenciamento de vendas",
+                });
+                c.UseAllOfToExtendReferenceSchemas();
+                c.UseInlineDefinitionsForEnums();
+                c.SupportNonNullableReferenceTypes();
+                c.CustomSchemaIds(type => type.FullName);
+                c.EnableAnnotations();
+                c.DescribeAllParametersInCamelCase();
+                c.OperationFilter<DynamicFilterOperationFilter>();
+            });
+
+            builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddDbContext<DefaultContext>(options =>
                 options.UseNpgsql(
@@ -109,11 +131,15 @@ public class Program
 
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
-            if (app.Environment.IsDevelopment())
+
+            //app.UseSwagger();
+             app.UseSwagger(c => c.SerializeAsV2 = true);
+            //app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ambev Developer Evaluation API v1");
+                c.RoutePrefix = string.Empty; // Deixa Swagger disponível na raiz
+            });
 
             app.UseHttpsRedirection();
 
@@ -122,6 +148,7 @@ public class Program
 
             app.UseBasicHealthChecks();
 
+            app.UseStaticFiles();
             app.MapControllers();
 
             app.Run();

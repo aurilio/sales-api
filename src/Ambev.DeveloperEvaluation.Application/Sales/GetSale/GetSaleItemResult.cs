@@ -6,19 +6,9 @@
 public class GetSaleItemResult
 {
     /// <summary>
-    /// The unique identifier of the sale item.
-    /// </summary>
-    public Guid Id { get; set; }
-
-    /// <summary>
     /// The external identifier of the product.
     /// </summary>
-    public int ProductId { get; set; }
-
-    /// <summary>
-    /// The denormalized title or name of the product.
-    /// </summary>
-    public string ProductName { get; set; } = string.Empty;
+    public Guid ProductId { get; set; }
 
     /// <summary>
     /// The quantity of the product sold.
@@ -49,4 +39,9 @@ public class GetSaleItemResult
     /// Gets the date and time of the last update to this sale item's information.
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the product details associated with the sale item.
+    /// </summary>
+    public ProductDetailsResult ProductDetails { get; set; } = new();
 }
