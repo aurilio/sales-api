@@ -35,15 +35,12 @@ public class Program
             builder.Services.AddEndpointsApiExplorer();
 
             builder.AddBasicHealthChecks();
-            //builder.Services.AddSwaggerGen();
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "Ambev Developer Evaluation API",
                     Version = "v1",
-                    //Version = "1.0.0",
-                    //Version = "3.0.1",
                     Description = "API para gerenciamento de vendas",
                 });
                 c.UseAllOfToExtendReferenceSchemas();
@@ -131,15 +128,8 @@ public class Program
 
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
-
-            //app.UseSwagger();
              app.UseSwagger(c => c.SerializeAsV2 = true);
-            //app.UseSwaggerUI();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ambev Developer Evaluation API v1");
-                c.RoutePrefix = string.Empty; // Deixa Swagger disponível na raiz
-            });
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 
