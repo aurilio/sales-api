@@ -1,5 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Common.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.Messaging.Events;
+using Ambev.DeveloperEvaluation.Messaging.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -12,15 +14,20 @@ public class DeleteSaleHandler : IRequestHandler<DeleteSaleCommand, DeleteSaleRe
 {
     private readonly ISaleRepository _saleRepository;
     private readonly ILogger<DeleteSaleHandler> _logger;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Initializes a new instance of DeleteSaleHandler
     /// </summary>
     /// <param name="saleRepository">The sale repository</param>
-    public DeleteSaleHandler(ISaleRepository saleRepository, ILogger<DeleteSaleHandler> logger)
+    public DeleteSaleHandler(
+        ISaleRepository saleRepository,
+        ILogger<DeleteSaleHandler> logger,
+        IDomainEventPublisher domainEventPublisher)
     {
         _saleRepository = saleRepository;
         _logger = logger;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -43,6 +50,8 @@ public class DeleteSaleHandler : IRequestHandler<DeleteSaleCommand, DeleteSaleRe
         }
 
         _logger.LogInformation("Sale with ID {SaleId} successfully deleted.", request.Id);
+        await _domainEventPublisher.PublishAsync(new CancelledEvent(request.Id));
+
         return new DeleteSaleResponse { Message = $"Sale with ID {request.Id} was deleted successfully" };
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Ambev.DeveloperEvaluation.Common.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.Messaging.Events;
+using Ambev.DeveloperEvaluation.Messaging.Interfaces;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -15,6 +17,7 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<UpdateSaleHandler> _logger;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UpdateSaleHandler"/>.
@@ -22,11 +25,16 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
     /// <param name="saleRepository">The sale repository.</param>
     /// <param name="mapper">The AutoMapper instance.</param>
     /// <param name="logger">The logger instance.</param>
-    public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper, ILogger<UpdateSaleHandler> logger)
+    public UpdateSaleHandler(
+        ISaleRepository saleRepository,
+        IMapper mapper,
+        ILogger<UpdateSaleHandler> logger,
+        IDomainEventPublisher domainEventPublisher)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
         _logger = logger;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -66,7 +74,11 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         _logger.LogDebug("Persisting updated sale to repository...");
         var updatedSale = await _saleRepository.UpdateAsync(saleToUpdate, cancellationToken);
 
+        if (command.IsCancelled)
+            await _domainEventPublisher.PublishAsync(new CancelledEvent(updatedSale.Id));
+
         _logger.LogInformation("Sale updated successfully with ID: {SaleId}", updatedSale.Id);
+        await _domainEventPublisher.PublishAsync(new ModifiedEvent(updatedSale.Id));
 
         return _mapper.Map<UpdateSaleResult>(updatedSale);
     }

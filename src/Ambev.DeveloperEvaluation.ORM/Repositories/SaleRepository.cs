@@ -52,9 +52,12 @@ public class SaleRepository : ISaleRepository
     public async Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Fetching sale with ID: {SaleId}", id);
-        return await _context.Sales
-            .Include(s => s.Items)
-            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
+        var result = await _context.Sales.AsNoTracking()
+                                    .Include(s => s.Items)
+                                    .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
+        return result;
     }
 
     /// <inheritdoc />
