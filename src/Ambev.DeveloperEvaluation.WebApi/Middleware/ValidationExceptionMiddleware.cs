@@ -1,33 +1,37 @@
 ﻿using Ambev.DeveloperEvaluation.Common.Exceptions;
-using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.WebApi.Common.Errors;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text.Json;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Middleware;
 
 /// <summary>
-/// Middleware responsável por capturar exceções esperadas durante o processamento da requisição
-/// e retornar respostas padronizadas no formato ProblemDetails.
+/// Middleware responsible for capturing known exceptions during request processing
+/// and returning standardized responses in ProblemDetails format.
 /// </summary>
 public class ValidationExceptionMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<ValidationExceptionMiddleware> _logger;
 
     /// <summary>
-    /// Inicializa uma nova instância do <see cref="ValidationExceptionMiddleware"/>.
+    /// Initializes a new instance of <see cref="ValidationExceptionMiddleware"/>.
     /// </summary>
-    /// <param name="next">O próximo middleware da pipeline.</param>
-    public ValidationExceptionMiddleware(RequestDelegate next)
+    /// <param name="next">The next middleware in the pipeline.</param>
+    public ValidationExceptionMiddleware(
+        RequestDelegate next,
+        ILogger<ValidationExceptionMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Executa o middleware, interceptando exceções de validação, domínio, argumentos inválidos e recursos não encontrados.
+    /// Executes the middleware, intercepting validation, domain, argument and not found exceptions.
     /// </summary>
-    /// <param name="context">O contexto HTTP da requisição.</param>
+    /// <param name="context">The HTTP request context.</param>
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -50,14 +54,18 @@ public class ValidationExceptionMiddleware
         {
             await HandleArgumentExceptionAsync(context, ex);
         }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            await HandleConcurrencyExceptionAsync(context, ex);
+        }
     }
 
     /// <summary>
-    /// Trata exceções de validação do FluentValidation.
+    /// Handles validation exceptions thrown by FluentValidation.
     /// </summary>
-    private static Task HandleValidationExceptionAsync(HttpContext context, ValidationException exception)
+    private Task HandleValidationExceptionAsync(HttpContext context, ValidationException exception)
     {
-        Log.Warning(exception,
+        _logger.LogWarning(exception,
             "Validation error at {Path} | TraceId: {TraceId} | Errors: {@Errors}",
             context.Request.Path,
             context.TraceIdentifier,
@@ -72,11 +80,11 @@ public class ValidationExceptionMiddleware
     }
 
     /// <summary>
-    /// Trata exceções lançadas quando um recurso não é encontrado.
+    /// Handles not found exceptions when a resource is missing.
     /// </summary>
-    private static Task HandleNotFoundExceptionAsync(HttpContext context, NotFoundException exception)
+    private Task HandleNotFoundExceptionAsync(HttpContext context, NotFoundException exception)
     {
-        Log.Warning(exception,
+        _logger.LogWarning(exception,
             "Resource not found at {Path} | TraceId: {TraceId} | Resource: {Resource} | Identifier: {Identifier}",
             context.Request.Path,
             context.TraceIdentifier,
@@ -92,11 +100,11 @@ public class ValidationExceptionMiddleware
     }
 
     /// <summary>
-    /// Trata exceções de regras de negócio do domínio.
+    /// Handles domain exceptions related to business rule violations.
     /// </summary>
-    private static Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
+    private Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
     {
-        Log.Warning(exception,
+        _logger.LogWarning(exception,
             "Domain rule violation at {Path} | TraceId: {TraceId} | Message: {Message}",
             context.Request.Path,
             context.TraceIdentifier,
@@ -115,11 +123,11 @@ public class ValidationExceptionMiddleware
     }
 
     /// <summary>
-    /// Trata exceções de argumentos inválidos em chamadas de métodos.
+    /// Handles invalid argument exceptions for method calls.
     /// </summary>
-    private static Task HandleArgumentExceptionAsync(HttpContext context, ArgumentException exception)
+    private Task HandleArgumentExceptionAsync(HttpContext context, ArgumentException exception)
     {
-        Log.Warning(exception,
+        _logger.LogWarning(exception,
             "Invalid argument at {Path} | TraceId: {TraceId} | Param: {ParamName} | Message: {Message}",
             context.Request.Path,
             context.TraceIdentifier,
@@ -139,7 +147,30 @@ public class ValidationExceptionMiddleware
     }
 
     /// <summary>
-    /// Serializa e envia a resposta JSON padronizada para o cliente.
+    /// Handles optimistic concurrency exceptions (conflicts during update).
+    /// </summary>
+    private Task HandleConcurrencyExceptionAsync(HttpContext context, DbUpdateConcurrencyException exception)
+    {
+        _logger.LogWarning(exception,
+            "Concurrency conflict at {Path} | TraceId: {TraceId} | Message: {Message}",
+            context.Request.Path,
+            context.TraceIdentifier,
+            exception.Message);
+
+        var response = CustomProblemDetailsFactory.CreateGenericProblemDetails(
+            type: "ConcurrencyConflict",
+            error: "Conflict detected",
+            detail: "The resource you're trying to update has been modified by another operation. Please refresh and try again."
+        );
+
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = StatusCodes.Status409Conflict;
+
+        return WriteResponseAsync(context, response);
+    }
+
+    /// <summary>
+    /// Serializes and sends a standardized JSON response to the client.
     /// </summary>
     private static Task WriteResponseAsync(HttpContext context, object response)
     {

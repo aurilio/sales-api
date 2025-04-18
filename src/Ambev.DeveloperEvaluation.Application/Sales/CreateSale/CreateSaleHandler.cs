@@ -1,5 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.Messaging.Events;
+using Ambev.DeveloperEvaluation.Messaging.Interfaces;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -14,6 +16,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<CreateSaleHandler> _logger;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Initializes a new instance of CreateSaleHandler.
@@ -21,11 +24,16 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     /// <param name="saleRepository">The sale repository.</param>
     /// <param name="mapper">The AutoMapper instance.</param>
     /// <param name="logger">Logger instance for logging operations.</param>
-    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper, ILogger<CreateSaleHandler> logger)
+    public CreateSaleHandler(
+        ISaleRepository saleRepository,
+        IMapper mapper,
+        ILogger<CreateSaleHandler> logger,
+        IDomainEventPublisher domainEventPublisher)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
         _logger = logger;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -47,6 +55,8 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         var result = _mapper.Map<CreateSaleResult>(savedSale);
 
         _logger.LogInformation("Sale created successfully. ID: {SaleId}", result.Id);
+        await _domainEventPublisher.PublishAsync(new CreatedEvent(sale.Id));
+
         return result;
     }
 

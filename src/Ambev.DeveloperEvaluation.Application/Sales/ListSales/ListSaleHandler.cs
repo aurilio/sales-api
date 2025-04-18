@@ -1,4 +1,5 @@
-﻿using Ambev.DeveloperEvaluation.Common.Pagination;
+﻿using Ambev.DeveloperEvaluation.Common.Extensions;
+using Ambev.DeveloperEvaluation.Common.Pagination;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
@@ -50,8 +51,8 @@ public class ListSaleHandler : IRequestHandler<ListSaleQuery, PaginatedList<Sale
         }
 
         query = string.IsNullOrWhiteSpace(request.OrderBy)
-            ? query.OrderByDescending(s => s.SaleDate)
-            : query.OrderBy(s => EF.Property<object>(s, request.OrderBy!));
+                        ? query.OrderByDescending(s => s.SaleDate)
+                        : query.OrderByDynamic(request.OrderBy!);
 
         var paginatedResult = await PaginatedList<Sale>.CreateAsync(query, request.Page, request.Size);
 
