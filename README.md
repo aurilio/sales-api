@@ -94,10 +94,30 @@ cd src/Ambev.DeveloperEvaluation.WebApi
 dotnet run
 ```
 
+## 📦 Imagem Docker
+
+Esta aplicação já está disponível como imagem Docker pública no Docker Hub!
+
+Você pode executar diretamente a API utilizando a imagem:
+
+```bash
+docker pull aurilio/saleapi:latest
+
+```
+🚀 Executando com Docker   
+Para executar a aplicação sem precisar clonar o repositório:   
+```bash
+docker run -p 8080:8080 aurilio/saleapi:latest
+
+```
+🔗 Link para a imagem no Docker Hub   
+ https://hub.docker.com/r/aurilio/saleapi
+
+
 ## 📚 Endpoints disponíveis
 - Acesse a documentação Swagger para explorar todos os endpoints e testar as operações disponíveis:
 ```bash
-https://localhost:7181/swagger
+http://localhost:8080/swagger/index.html
 ```
 
 
