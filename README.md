@@ -28,7 +28,7 @@ Esta é a implementação que consiste no desenvolvimento de uma API RESTful par
 │   ├── ORM               # Repositórios e EF Core
 │   ├── Messaging         # Publicação de eventos
 │   ├── Common            # CrossCutting: Logging, Exceptions, Validations
-│   ├── WebApi            # Web API (Minimal API + Swagger + Middleware)
+│   ├── WebApi            # Web API (Controller + Swagger + Middleware)
 │   └── IoC               # Injeção de dependência
 ├── tests
 │   └── Unit              # Testes unitários
@@ -151,28 +151,5 @@ LinkedIn: [@aurilio](https://www.linkedin.com/in/auriliomendes/)
 
 ## 📃 Licença
 
-Este projeto é apenas para fins de avaliação técnica e aprendizado.
+Este projeto é apenas para fins de aprendizado.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-asdfasdfasdf
