@@ -1,6 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Common.Pagination;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.ORM.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -79,21 +80,22 @@ public class SaleRepository : ISaleRepository
     /// <param name="orderBy">Comma-separated ordering fields (e.g. "saleDate desc").</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>Paginated list of sales.</returns>
-    public async Task<PaginatedList<Sale>> ListAsync(int pageNumber, int pageSize, string? orderBy = null, CancellationToken cancellationToken = default)
+    public async Task<PaginatedList<Sale>> ListAsync(int pageNumber, int pageSize, string? orderBy = null, Dictionary<string, string>? filters = null, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Listing sales with page: {Page}, size: {Size}, order: {Order}", pageNumber, pageSize, orderBy);
 
         var query = GetAllQueryable();
         var totalCount = await query.CountAsync(cancellationToken);
 
-        if (!string.IsNullOrWhiteSpace(orderBy))
+        if (filters is { Count: > 0 })
         {
-            query = ApplyOrdering(query, orderBy);
+            query = query.ApplyFilters(filters);
+            _logger.LogDebug("Applied {Count} filters to query.", filters.Count);
         }
-        else
-        {
-            query = query.OrderByDescending(s => s.SaleDate);
-        }
+
+        query = string.IsNullOrWhiteSpace(orderBy)
+                ? query.OrderByDescending(s => s.SaleDate)
+                : query.OrderByDynamic(orderBy!);
 
         var items = await query
             .Skip((pageNumber - 1) * pageSize)
@@ -145,48 +147,5 @@ public class SaleRepository : ISaleRepository
 
         _logger.LogInformation("Sale with ID {SaleId} deleted successfully.", id);
         return true;
-    }
-
-    /// <summary>
-    /// Applies dynamic ordering to a sales query.
-    /// </summary>
-    /// <param name="query">The sales query.</param>
-    /// <param name="orderBy">Ordering clause (comma-separated).</param>
-    /// <returns>Ordered IQueryable.</returns>
-    private IQueryable<Sale> ApplyOrdering(IQueryable<Sale> query, string orderBy)
-    {
-        var properties = orderBy.Split(',');
-        var first = true;
-
-        foreach (var property in properties)
-        {
-            var trimmedProperty = property.Trim();
-            var orderDirection = "asc";
-
-            if (trimmedProperty.EndsWith(" desc", System.StringComparison.OrdinalIgnoreCase))
-            {
-                trimmedProperty = trimmedProperty.Substring(0, trimmedProperty.Length - 5).Trim();
-                orderDirection = "desc";
-            }
-            else if (trimmedProperty.EndsWith(" asc", System.StringComparison.OrdinalIgnoreCase))
-            {
-                trimmedProperty = trimmedProperty.Substring(0, trimmedProperty.Length - 4).Trim();
-                orderDirection = "asc";
-            }
-
-            if (first)
-            {
-                query = orderDirection == "asc" ? query.OrderBy(s => EF.Property<object>(s, trimmedProperty)) : query.OrderByDescending(s => EF.Property<object>(s, trimmedProperty));
-                first = false;
-            }
-            else
-            {
-                query = orderDirection == "asc"
-                    ? (query as IOrderedQueryable<Sale>)!.ThenBy(s => EF.Property<object>(s, trimmedProperty))
-                    : (query as IOrderedQueryable<Sale>)!.ThenByDescending(s => EF.Property<object>(s, trimmedProperty));
-            }
-        }
-
-        return query;
     }
 }

@@ -36,7 +36,7 @@ public class ListSaleHandlerTests
     {
         var query = new ListSaleQuery(page: 1, size: 10, orderBy: "SaleDate", filters: new Dictionary<string, string>());
 
-        var fakeSales = Enumerable.Range(1, 100).Select(_ => new Sale(
+        var fakeSales = Enumerable.Range(1, 10).Select(_ => new Sale(
             _faker.Commerce.Ean8(),
             _faker.Date.Recent(),
             Guid.NewGuid(),
@@ -44,19 +44,25 @@ public class ListSaleHandlerTests
             _faker.Company.CompanyName(),
             new List<SaleItem>
             {
-                new SaleItem(Guid.NewGuid(), 10,
-                    new ProductDetails(
-                        _faker.Commerce.ProductName(),
-                        _faker.Commerce.Categories(1)[0],
-                        _faker.Random.Decimal(10, 100),
-                        _faker.Image.PicsumUrl()))
+            new SaleItem(Guid.NewGuid(), 10,
+                new ProductDetails(
+                    _faker.Commerce.ProductName(),
+                    _faker.Commerce.Categories(1)[0],
+                    _faker.Random.Decimal(10, 100),
+                    _faker.Image.PicsumUrl()))
             }
         )).ToList();
 
-        //var pagedList = new PaginatedList<Sale>(fakeSales, count: 100, pageNumber: 1, pageSize: 10);
+        var paginated = new PaginatedList<Sale>(
+            items: fakeSales,
+            count: 100,
+            pageNumber: 1,
+            pageSize: 10
+        );
 
-        var mockQueryable = fakeSales.AsQueryable().BuildMock();
-        _saleRepository.GetAllQueryable().Returns(mockQueryable);
+        _saleRepository
+            .ListAsync(1, 10, "SaleDate", Arg.Any<Dictionary<string, string>>(), Arg.Any<CancellationToken>())
+            .Returns(paginated);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -73,32 +79,38 @@ public class ListSaleHandlerTests
     {
         // Arrange
         var query = new ListSaleQuery
-                            (
-                                page: 1,
-                                size: 5,
-                                orderBy: "SaleDate",
-                                filters: new Dictionary<string, string>
-                                {
-                                    { "Branch", "*Filial*" }
-                                }
-                            );
+        (
+            page: 1,
+            size: 5,
+            orderBy: "SaleDate",
+            filters: new Dictionary<string, string>
+            {
+            { "Branch", "*Filial*" }
+            }
+        );
 
         var matchingSale = new Sale(
-                    saleNumber: "A-2025-001",
-                    saleDate: _faker.Date.Recent(),
-                    customerId: Guid.NewGuid(),
-                    customerName: _faker.Name.FullName(),
-                    branch: "Filial São Paulo",
-                    items: new List<SaleItem>
-                    {
-                        new SaleItem(Guid.NewGuid(), 4,
-                        new ProductDetails("Produto", "Categoria", 100m, "img.png"))
-                    });
+            saleNumber: "A-2025-001",
+            saleDate: _faker.Date.Recent(),
+            customerId: Guid.NewGuid(),
+            customerName: _faker.Name.FullName(),
+            branch: "Filial São Paulo",
+            items: new List<SaleItem>
+            {
+            new SaleItem(Guid.NewGuid(), 4,
+                new ProductDetails("Produto", "Categoria", 100m, "img.png"))
+            });
 
-        var sales = new List<Sale> { matchingSale };
+        var paginated = new PaginatedList<Sale>(
+            items: new List<Sale> { matchingSale },
+            count: 1,
+            pageNumber: 1,
+            pageSize: 5
+        );
 
-        var mockSales = sales.BuildMock().BuildMockDbSet();
-        _saleRepository.GetAllQueryable().Returns(mockSales);
+        _saleRepository
+            .ListAsync(1, 5, "SaleDate", query.Filters, Arg.Any<CancellationToken>())
+            .Returns(paginated);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -109,17 +121,17 @@ public class ListSaleHandlerTests
         result.First().Branch.Should().Contain("Filial");
     }
 
+
     [Fact(DisplayName = "Given no order by When handling Then defaults to SaleDate descending")]
     public async Task Handle_NoOrderBy_UsesDefaultOrder()
     {
         // Arrange
-        var query = new ListSaleQuery
-                            (
-                                page: 1,
-                                size: 5,
-                                orderBy: null,
-                                filters: null
-                            );
+        var query = new ListSaleQuery(
+            page: 1,
+            size: 5,
+            orderBy: null,
+            filters: null
+        );
 
         var sales = Enumerable.Range(0, 3).Select(_ => new Sale(
             _faker.Commerce.Ean8(),
@@ -129,13 +141,21 @@ public class ListSaleHandlerTests
             _faker.Company.CompanyName(),
             new List<SaleItem>
             {
-                new SaleItem(Guid.NewGuid(), 3,
-                    new ProductDetails("Test", "Cat", 50m, "img.png"))
+            new SaleItem(Guid.NewGuid(), 3,
+                new ProductDetails("Test", "Cat", 50m, "img.png"))
             }
         )).ToList();
 
-        var mockSales = sales.BuildMock().BuildMockDbSet();
-        _saleRepository.GetAllQueryable().Returns(mockSales);
+        var paginated = new PaginatedList<Sale>(
+            items: sales,
+            count: sales.Count,
+            pageNumber: 1,
+            pageSize: 5
+        );
+
+        _saleRepository
+            .ListAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<Dictionary<string, string>?>(), Arg.Any<CancellationToken>())
+            .Returns(paginated);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -143,5 +163,8 @@ public class ListSaleHandlerTests
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(sales.Count);
+        result.CurrentPage.Should().Be(1);
+        result.PageSize.Should().Be(5);
     }
+
 }
