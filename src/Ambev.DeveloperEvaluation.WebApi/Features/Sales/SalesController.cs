@@ -154,4 +154,5 @@ public class SalesController : BaseController
             totalPages: result.TotalPages
         );
     }
+
 }
