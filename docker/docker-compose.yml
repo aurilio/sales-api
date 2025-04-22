@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:13
+    container_name: saleapi_db
+    environment:
+      POSTGRES_DB: developer_evaluation
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: ev@luAt10n
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U developer -d developer_evaluation"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: aurilio/saleapi:latest
+    container_name: saleapi_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - POSTGRES_USER=developer
+      - POSTGRES_PASSWORD=ev@luAt10n
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=developer_evaluation;Username=developer;Password=ev@luAt10n
+
+  frontend:
+    image: aurilio/sales-webapp:latest
+    container_name: saleapi_frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
