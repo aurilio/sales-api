@@ -38,61 +38,70 @@ public static class QueryableExtensions
     /// <returns>The filtered queryable.</returns>
     public static IQueryable<T> ApplyFilters<T>(this IQueryable<T> query, Dictionary<string, string> filters)
     {
+        var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                                  .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
+
         foreach (var (key, value) in filters)
         {
-            if (string.IsNullOrWhiteSpace(value) || key.StartsWith("_"))
+            if (string.IsNullOrWhiteSpace(value) ||
+                key.StartsWith("_page", StringComparison.OrdinalIgnoreCase) ||
+                key.StartsWith("_size", StringComparison.OrdinalIgnoreCase) ||
+                key.StartsWith("_order", StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             var parameter = Expression.Parameter(typeof(T), "x");
-            Expression? property;
-            Expression? comparison;
-            Expression? constant;
+            Expression? comparison = null;
+            Expression? propertyExpr = null;
 
             if (key.StartsWith("_min", StringComparison.OrdinalIgnoreCase))
             {
                 var propName = key[4..];
-                property = Expression.PropertyOrField(parameter, propName);
-                constant = ConvertToPropertyType(property.Type, value);
-                comparison = Expression.GreaterThanOrEqual(property, constant);
+                if (!properties.TryGetValue(propName, out var propertyInfo)) continue;
+
+                propertyExpr = Expression.Property(parameter, propertyInfo);
+                var constant = ConvertToPropertyType(propertyInfo.PropertyType, value);
+                comparison = Expression.GreaterThanOrEqual(propertyExpr, constant);
             }
             else if (key.StartsWith("_max", StringComparison.OrdinalIgnoreCase))
             {
                 var propName = key[4..];
-                property = Expression.PropertyOrField(parameter, propName);
-                constant = ConvertToPropertyType(property.Type, value);
-                comparison = Expression.LessThanOrEqual(property, constant);
+                if (!properties.TryGetValue(propName, out var propertyInfo)) continue;
+
+                propertyExpr = Expression.Property(parameter, propertyInfo);
+                var constant = ConvertToPropertyType(propertyInfo.PropertyType, value);
+                comparison = Expression.LessThanOrEqual(propertyExpr, constant);
             }
             else
             {
-                property = Expression.PropertyOrField(parameter, key);
+                if (!properties.TryGetValue(key, out var propertyInfo)) continue;
 
-                if (property.Type == typeof(string))
+                propertyExpr = Expression.Property(parameter, propertyInfo);
+
+                if (propertyInfo.PropertyType == typeof(string))
                 {
                     var method = GetWildcardStringMethod(value, out var formatted);
-                    constant = Expression.Constant(formatted.ToLowerInvariant());
                     var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes)!;
-                    var toLowerProperty = Expression.Call(property, toLowerMethod);
+                    var toLowerProperty = Expression.Call(propertyExpr, toLowerMethod);
+                    var constant = Expression.Constant(formatted.ToLowerInvariant());
                     comparison = Expression.Call(toLowerProperty, method, constant);
                 }
-                else if (property.Type == typeof(bool))
+                else if (propertyInfo.PropertyType == typeof(bool))
                 {
-                    constant = Expression.Constant(bool.Parse(value));
-                    comparison = Expression.Equal(property, constant);
+                    comparison = Expression.Equal(propertyExpr, Expression.Constant(bool.Parse(value)));
                 }
-                else if (property.Type == typeof(int))
+                else if (propertyInfo.PropertyType == typeof(int))
                 {
-                    constant = Expression.Constant(int.Parse(value));
-                    comparison = Expression.Equal(property, constant);
+                    comparison = Expression.Equal(propertyExpr, Expression.Constant(int.Parse(value)));
                 }
-                else if (property.Type == typeof(decimal))
+                else if (propertyInfo.PropertyType == typeof(decimal))
                 {
-                    constant = Expression.Constant(decimal.Parse(value, CultureInfo.InvariantCulture));
-                    comparison = Expression.Equal(property, constant);
+                    comparison = Expression.Equal(propertyExpr, Expression.Constant(decimal.Parse(value, CultureInfo.InvariantCulture)));
                 }
-                else if (property.Type == typeof(Guid))
+                else if (propertyInfo.PropertyType == typeof(Guid))
                 {
-                    constant = Expression.Constant(Guid.Parse(value));
-                    comparison = Expression.Equal(property, constant);
+                    comparison = Expression.Equal(propertyExpr, Expression.Constant(Guid.Parse(value)));
                 }
                 else
                 {
@@ -100,8 +109,11 @@ public static class QueryableExtensions
                 }
             }
 
-            var lambda = Expression.Lambda<Func<T, bool>>(comparison, parameter);
-            query = query.Where(lambda);
+            if (comparison != null)
+            {
+                var lambda = Expression.Lambda<Func<T, bool>>(comparison, parameter);
+                query = query.Where(lambda);
+            }
         }
 
         return query;

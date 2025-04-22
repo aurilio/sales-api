@@ -29,12 +29,23 @@ public class Program
             }
 
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
             builder.AddDefaultLogging();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:4200")
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
+            });
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
-            builder.AddBasicHealthChecks();
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -53,6 +64,7 @@ public class Program
             });
 
             builder.Services.AddHttpContextAccessor();
+            builder.AddBasicHealthChecks();
 
             builder.Services.AddDbContext<DefaultContext>(options =>
                 options.UseNpgsql(
@@ -62,6 +74,11 @@ public class Program
             );
 
             builder.Services.AddJwtAuthentication(builder.Configuration);
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Internal", policy =>
+                    policy.RequireClaim("scope", "internal.api"));
+            });
 
             builder.RegisterDependencies();
 
@@ -77,8 +94,8 @@ public class Program
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-            //if (!builder.Environment.IsDevelopment())
-                builder.WebHost.UseUrls("http://0.0.0.0:8080");
+            if (!builder.Environment.IsDevelopment())
+                builder.WebHost.UseUrls("http://0.0.0.0:8080", "https://0.0.0.0:8081");
 
             var app = builder.Build();
 
@@ -128,10 +145,12 @@ public class Program
 
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
-             app.UseSwagger(c => c.SerializeAsV2 = true);
+            app.UseSwagger(c => c.SerializeAsV2 = true);
             app.UseSwaggerUI();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
+            app.UseRouting();
+            app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();

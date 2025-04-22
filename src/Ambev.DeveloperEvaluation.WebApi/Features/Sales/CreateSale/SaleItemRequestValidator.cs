@@ -16,7 +16,8 @@ public class SaleItemRequestValidator : AbstractValidator<SaleItemRequest>
     {
         RuleFor(x => x.ProductId)
             .NotEmpty()
-            .WithMessage("Product ID is required for each item.");
+            .WithMessage("Product ID is required for each item.")
+            .Must(BeAValidGuid).WithMessage("Product ID must be a valid GUID.");
 
         RuleFor(x => x.Quantity)
             .InclusiveBetween(1, 20)
@@ -26,5 +27,10 @@ public class SaleItemRequestValidator : AbstractValidator<SaleItemRequest>
             .NotNull()
             .WithMessage("Product details must be provided for each item.")
             .SetValidator(new ProductDetailsRequestValidator());
+    }
+
+    private bool BeAValidGuid(Guid customerId)
+    {
+        return customerId != Guid.Empty;
     }
 }
