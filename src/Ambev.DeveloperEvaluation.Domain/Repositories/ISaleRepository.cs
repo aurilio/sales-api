@@ -32,7 +32,7 @@ public interface ISaleRepository
     /// <param name="orderBy">The property to order the sales by (optional).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A paginated list of sales.</returns>
-    Task<PaginatedList<Sale>> ListAsync(int pageNumber, int pageSize, string? orderBy = null, CancellationToken cancellationToken = default);
+    Task<PaginatedList<Sale>> ListAsync(int pageNumber, int pageSize, string? orderBy = null, Dictionary<string, string>? filters = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing sale in the repository.

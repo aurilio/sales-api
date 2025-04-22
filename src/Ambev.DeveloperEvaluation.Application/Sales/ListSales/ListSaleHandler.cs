@@ -1,10 +1,8 @@
-﻿using Ambev.DeveloperEvaluation.Common.Extensions;
-using Ambev.DeveloperEvaluation.Common.Pagination;
+﻿using Ambev.DeveloperEvaluation.Common.Pagination;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.ListSales;
@@ -42,19 +40,7 @@ public class ListSaleHandler : IRequestHandler<ListSaleQuery, PaginatedList<Sale
         _logger.LogInformation("Listing sales: Page={Page}, Size={Size}, OrderBy={OrderBy}, Filters={FiltersCount}",
             request.Page, request.Size, request.OrderBy ?? "default", request.Filters?.Count ?? 0);
 
-        var query = _saleReadRepository.GetAllQueryable();
-
-        if (request.Filters is { Count: > 0 })
-        {
-            query = query.ApplyFilters(request.Filters);
-            _logger.LogDebug("Applied {Count} filters to query.", request.Filters.Count);
-        }
-
-        query = string.IsNullOrWhiteSpace(request.OrderBy)
-                        ? query.OrderByDescending(s => s.SaleDate)
-                        : query.OrderByDynamic(request.OrderBy!);
-
-        var paginatedResult = await PaginatedList<Sale>.CreateAsync(query, request.Page, request.Size);
+        var paginatedResult = await _saleReadRepository.ListAsync(request.Page, request.Size, request.OrderBy, request.Filters, cancellationToken);
 
         _logger.LogInformation("Sales listed successfully. TotalItems={TotalCount}, CurrentPage={CurrentPage}",
             paginatedResult.TotalCount, paginatedResult.CurrentPage);

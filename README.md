@@ -1,133 +1,97 @@
 # 🛒 Sales API
 
-Esta é a implementação que consiste no desenvolvimento de uma API RESTful para gerenciamento de vendas, utilizando arquitetura limpa, boas práticas de engenharia de software e tecnologias modernas como .NET 8, PostgreSQL.
+This is a RESTful API for sales management, designed with Clean Architecture principles and modern technologies such as .NET 8 and PostgreSQL.
 
 ---
 
 ## 🚀 Tecnologias e Padrões Utilizados
 
-- **.NET 8** com Minimal APIs
-- **PostgreSQL** como banco de dados relacional
-- **FluentValidation** para validação dos comandos
-- **AutoMapper** para mapeamento de objetos
-- **xUnit**, **FluentAssertions**, **Bogus**, **AutoFixture**, **NSubstitute** para testes
-- **Serilog** para logging estruturado com suporte à rastreabilidade
-- **Docker e Docker Compose** para provisionamento dos serviços
-- **Swagger** para documentação interativa
-- **SOLID**, **DDD**, **Clean Code**, **GitFlow** e **Semantic Commit** como boas práticas
+- **.NET 8**
+- **PostgreSQL** as the relational database
+- **FluentValidation** for request validations
+- **AutoMapper** for object mapping
+- **xUnit**, **FluentAssertions**, **Bogus**, **AutoFixture**, **NSubstitute** for unit testing
+- **Serilog** for structured logging and traceability
+- **Docker e Docker Compose**  for service orchestration
+- **Swagger** for interactive API documentation
+- Best practices including **SOLID**, **DDD**, **Clean Code**, **GitFlow** e **Semantic Commit**
 
 ---
 
 
-## 🧱 Estrutura do Projeto
+## 🧱 Project Structure
 
 ```bash
 ├── src
-│   ├── Application       # Handlers e comandos
-│   ├── Domain            # Entidades, VO e regras de negócio
-│   ├── ORM               # Repositórios e EF Core
-│   ├── Messaging         # Publicação de eventos
+│   ├── Application       # Handlers and commands
+│   ├── Domain            # Entities, Value Objects, business rules
+│   ├── ORM               # Repositories and EF Core
+│   ├── Messaging         # Domain event publication
 │   ├── Common            # CrossCutting: Logging, Exceptions, Validations
-│   ├── WebApi            # Web API (Controller + Swagger + Middleware)
-│   └── IoC               # Injeção de dependência
+│   ├── WebApi            # Web API (Swagger, Middleware, Controllers)
+│   └── IoC               # Dependency injection setup
 ├── tests
-│   └── Unit              # Testes unitários
-├── docker-compose.yml                              # Orquestração dos serviços
-├── README.md                                        # Este arquivo
+│   └── Unit              # Unit tests
+├── docker-compose.yml    # Compose for local development
+├── README.md             # This file
 
 ```
 
-## ✅ Requisitos
+## ✅ Requirements
 
-Antes de rodar a aplicação, certifique-se de que os seguintes requisitos estejam instalados na sua máquina:
+Make sure the following are installed on your machine:
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 
-### Docker (2 opções de instalação)
 
-Você pode escolher entre uma das opções abaixo para utilizar o Docker no ambiente Windows:
+## ⚙️ Running Locally
 
-#### 🔹 Opção 1: Docker Desktop (recomendado)
-
-A maneira mais simples e completa de rodar Docker no Windows é utilizando o Docker Desktop:
-
-- [Download Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- Compatível com Windows 10/11 (versões Pro e Home)
-- Já inclui integração com WSL 2
-
-> ⚠️ É necessário habilitar o WSL 2 e a Virtualização no BIOS.
-
-#### 🔹 Opção 2: Docker + Docker Compose via WSL (Windows com Ubuntu)
-
-Se preferir não usar o Docker Desktop, você pode instalar diretamente o `docker.io` dentro de uma distribuição Linux (como Ubuntu) via WSL:
-
-1. Instale e configure o [WSL 2](https://learn.microsoft.com/pt-br/windows/wsl/install)
-2. Instale o Ubuntu pela Microsoft Store
-3. No Ubuntu, execute:
-
-```bash
-sudo apt update
-sudo apt install docker.io docker-compose-plugin
-sudo service docker start
-```
-
-
-
-## ⚙️ Como executar localmente
-
-### 1. Clone o repositório
+### 1. Clone the repository
 ```bash
 git clone https://github.com/aurilio/sales-api.git
 cd sales-api
 ```
 
-### 2. Suba os serviços com Docker
-- Você pode rodar via Visual Studio 2022 ou via terminal com:
+### 2. Build and run with Docker Compose
 
 ```bash
 docker-compose up -d
 ```
 
-### 3.  Execute a aplicação
+### 3. Start the API manually (if not using Docker)
 ```bash
 cd src/Ambev.DeveloperEvaluation.WebApi
 dotnet run
 ```
 
-## 📦 Imagem Docker
+## 🐳 Run via Docker (pre-built image on Docker Hub)
 
-Esta aplicação já está disponível como imagem Docker pública no Docker Hub!
+### Steps
 
-Você pode executar diretamente a API utilizando a imagem:
+**Clone the repository:**
 
 ```bash
-docker pull aurilio/saleapi:latest
+git clone https://github.com/aurilio/sales-api.git
 
+cd sales-api/docker
+
+docker compose up
 ```
-🚀 Executando com Docker   
-Para executar a aplicação sem precisar clonar o repositório:   
+
+Access the application
+Open your browser and navigate to:
+
 ```bash
-docker run -p 8080:8080 aurilio/saleapi:latest
 
-```
-🔗 Link para a imagem no Docker Hub   
- https://hub.docker.com/r/aurilio/saleapi
+Swagger (API)	http://localhost:8080/swagger/index.html
+Frontend (UI)	http://localhost:4200 - already integrated with the API
 
-
-## 📚 Endpoints disponíveis
-- Acesse a documentação Swagger para explorar todos os endpoints e testar as operações disponíveis:
-```bash
-http://localhost:8080/swagger/index.html
 ```
 
 
----
+## 🧪 Running Tests
 
-```markdown
-
-## 🧪 Executar os testes
-
-Para rodar os testes unitários:
+To execute the unit tests::
 
 ```bash
 cd tests/Ambev.DeveloperEvaluation.Unit
@@ -136,40 +100,35 @@ dotnet test
 ```
 
 
----
+## 📦 Domain Event Publication
 
-```markdown
-## 📦 Publicação de eventos de domínio
-
-Os seguintes eventos de domínio são publicados (simulados via log):
+The following domain events are published and logged:
 
 - `CreatedEvent`
 - `ModifiedEvent`
 - `CancelledEvent`
 - `DeleteEvent`
 
-```
-## 📝 Commits e Versionamento
 
-Este projeto segue o padrão **[Semantic Commit Messages](https://www.conventionalcommits.org/en/v1.0.0/)** e o fluxo de trabalho **GitFlow**.
+## 📝 Commits & Versioning
 
-A versão atual é: `v1.0.0`
+- **[Semantic Commit Messages](https://www.conventionalcommits.org/en/v1.0.0/)**
+- **GitFlow**.
 
 
-## 📌 Observações
+## 📌 Notes
 
-- A aplicação trata exceções com middleware global (`ValidationExceptionMiddleware`) retornando respostas no formato `ProblemDetails`.
-- Está preparada para deploy em nuvem com containers.
-- Todo o domínio segue validação explícita e proteção de invariantes.
+- Exception handling is centralized using ValidationExceptionMiddleware.
+- Ready for cloud deployment with containers.
+- Business rules and validations are enforced within the domain layer.
 
-## 👨‍💻 Autor
+## 👨‍💻 Author
 
 **Aurílio Mendes**  
-Desenvolvedor .NET Sênior | Arquiteto de Software em formação  
+Senior .NET Developer | Aspiring Software Architect
 LinkedIn: [@aurilio](https://www.linkedin.com/in/auriliomendes/)
 
 
-## 📃 Licença
+## 📃 License
 
-Este projeto é apenas para fins de aprendizado.
-
+This project is for educational purposes only.

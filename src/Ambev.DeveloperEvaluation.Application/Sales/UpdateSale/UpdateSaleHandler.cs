@@ -71,6 +71,8 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
             saleItems
         );
 
+        saleToUpdate.SaleDate = DateTime.SpecifyKind(saleToUpdate.SaleDate, DateTimeKind.Utc);
+
         _logger.LogDebug("Persisting updated sale to repository...");
         var updatedSale = await _saleRepository.UpdateAsync(saleToUpdate, cancellationToken);
 

@@ -23,6 +23,7 @@ public class GetSaleProfile : Profile
            .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
            .ForPath(dest => dest.ProductDetails.Title, opt => opt.MapFrom(src => src.ProductDetails.Title))
            .ForPath(dest => dest.ProductDetails.Category, opt => opt.MapFrom(src => src.ProductDetails.Category))
+           .ForPath(dest => dest.ProductDetails.Price, opt => opt.MapFrom(src => src.ProductDetails.Price))
            .ForPath(dest => dest.ProductDetails.Image, opt => opt.MapFrom(src => src.ProductDetails.Image))
            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
            .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.Discount))

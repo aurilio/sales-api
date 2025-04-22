@@ -4,14 +4,17 @@ using AutoMapper;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Auth.AuthenticateUserFeature;
 using Ambev.DeveloperEvaluation.Application.Auth.AuthenticateUser;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Auth;
 
 /// <summary>
 /// Controller for authentication operations
 /// </summary>
+[Authorize(Policy = "Internal")]
 [ApiController]
 [Route("api/[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class AuthController : BaseController
 {
     private readonly IMediator _mediator;

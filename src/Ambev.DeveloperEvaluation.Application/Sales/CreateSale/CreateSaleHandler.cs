@@ -49,6 +49,8 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         var saleItems = MapSaleItems(command);
         var sale = BuildSale(command, saleItems);
 
+        sale.SaleDate = DateTime.SpecifyKind(sale.SaleDate, DateTimeKind.Utc);
+
         _logger.LogDebug("Saving sale to repository.");
         var savedSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
