@@ -50,6 +50,12 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
             .IsRequired()
             .HasColumnType("numeric(18,2)");
 
+        builder.Property(e => e.Version)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .IsConcurrencyToken()
+            .ValueGeneratedOnAddOrUpdate();
+
         builder.HasMany(s => s.Items)
             .WithOne()
             .HasForeignKey("SaleId")

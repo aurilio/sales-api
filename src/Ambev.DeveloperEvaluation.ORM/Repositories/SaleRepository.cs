@@ -54,9 +54,10 @@ public class SaleRepository : ISaleRepository
     {
         _logger.LogDebug("Fetching sale with ID: {SaleId}", id);
 
-        var result = await _context.Sales.AsNoTracking()
-                                    .Include(s => s.Items)
-                                    .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        var result = await _context.Sales
+                            .Include(s => s.Items)
+                            .AsTracking()
+                            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
         return result;
     }
@@ -114,9 +115,48 @@ public class SaleRepository : ISaleRepository
     /// <returns>The updated sale.</returns>
     public async Task<Sale?> UpdateAsync(Sale sale, CancellationToken cancellationToken = default)
     {
-        _context.Sales.Update(sale);
-
         _logger.LogDebug("Saving changes to database for sale ID: {SaleId}", sale.Id);
+
+        // Carrega os itens atuais persistidos no banco
+        var currentItems = await _context.SalesItem
+            .Where(i => i.SaleId == sale.Id)
+            .ToListAsync(cancellationToken);
+
+        var currentItemIds = currentItems.Select(i => i.Id).ToHashSet();
+
+        foreach (var item in sale.Items)
+        {
+            var entry = _context.Entry(item);
+
+            if (item.Id == Guid.Empty)
+            {
+                entry.State = EntityState.Added;
+            }
+            else
+            {
+                if (entry.State == EntityState.Detached)
+                    _context.Attach(item);
+
+                entry.State = EntityState.Modified;
+
+                // Só aplica Modified no Owned se o item já tem ID persistido
+                var productDetailsEntry = entry.Reference(e => e.ProductDetails).TargetEntry;
+                if (productDetailsEntry != null)
+                    productDetailsEntry.State = EntityState.Modified;
+            }
+        }
+
+        // Itens removidos: estavam no banco mas não estão mais na lista da entidade
+        var itemsToDelete = currentItems
+            .Where(dbItem => !sale.Items.Any(updated => updated.Id == dbItem.Id))
+            .ToList();
+
+        foreach (var item in itemsToDelete)
+        {
+            _logger.LogDebug("Marking item for deletion. Id: {ItemId}", item.Id);
+            _context.Entry(item).State = EntityState.Deleted;
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Sale with ID {SaleId} updated successfully.", sale.Id);

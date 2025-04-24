@@ -44,11 +44,7 @@ public static class UpdateSaleTestData
             _faker.Date.Recent(),
             Guid.NewGuid(),
             _faker.Name.FullName(),
-            _faker.Company.CompanyName(),
-            new List<SaleItem>
-            {
-            new SaleItem(Guid.NewGuid(), 1, new ProductDetails("Original", "Cat", 50m, "img"))
-            }
+            _faker.Company.CompanyName()
         );
     }
 }
