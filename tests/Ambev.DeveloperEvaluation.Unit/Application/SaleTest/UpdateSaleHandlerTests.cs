@@ -43,7 +43,7 @@ public class UpdateSaleHandlerTests
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(sale);
         _saleRepository.UpdateAsync(sale, Arg.Any<CancellationToken>()).Returns(sale);
         _mapper.Map<SaleItem>(Arg.Any<UpdateSaleItemCommand>())
-            .Returns(call => new SaleItem(Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
+            .Returns(call => new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
         _mapper.Map<UpdateSaleResult>(sale).Returns(new UpdateSaleResult { Id = sale.Id });
 
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -77,7 +77,7 @@ public class UpdateSaleHandlerTests
         _saleRepository.UpdateAsync(sale, Arg.Any<CancellationToken>()).Returns(sale);
 
         _mapper.Map<SaleItem>(Arg.Any<UpdateSaleItemCommand>())
-            .Returns(new SaleItem(Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
+            .Returns(new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
         _mapper.Map<UpdateSaleResult>(sale).Returns(new UpdateSaleResult { Id = sale.Id });
 
         await _handler.Handle(command, CancellationToken.None);
@@ -98,7 +98,7 @@ public class UpdateSaleHandlerTests
             .Throws(new InvalidOperationException("Failed to update sale"));
 
         _mapper.Map<SaleItem>(Arg.Any<UpdateSaleItemCommand>())
-            .Returns(new SaleItem(Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
+            .Returns(new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
 
         // Act
         var act = async () => await _handler.Handle(command, CancellationToken.None);
@@ -119,7 +119,7 @@ public class UpdateSaleHandlerTests
         _saleRepository.UpdateAsync(sale, Arg.Any<CancellationToken>()).Returns(sale);
 
         _mapper.Map<SaleItem>(Arg.Any<UpdateSaleItemCommand>())
-            .Returns(new SaleItem(Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
+            .Returns(new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2, new ProductDetails("Test", "Cat", 100m, "img")));
 
         _mapper.Map<UpdateSaleResult>(sale).Returns(new UpdateSaleResult { Id = sale.Id });
 

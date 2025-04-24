@@ -5,7 +5,6 @@ using Ambev.DeveloperEvaluation.Messaging.Events;
 using Ambev.DeveloperEvaluation.Messaging.Interfaces;
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
@@ -48,6 +47,9 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
     {
         _logger.LogInformation("Starting UpdateSaleCommand handler for Sale ID: {SaleId}", command.Id);
 
+        if (command.Items == null || command.Items.Count() <= 0)
+            throw new DomainException("A sale must have at least one item.");
+
         var saleToUpdate = await _saleRepository.GetByIdAsync(command.Id, cancellationToken);
 
         if (saleToUpdate == null)
@@ -62,21 +64,25 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 
             if (existingItem != null)
             {
-                existingItem.Update(updatedItem.ProductId, updatedItem.Quantity, updatedItem.ProductDetails);
+                existingItem.Update(
+                    updatedItem.ProductId,
+                    updatedItem.Quantity,
+                    updatedItem.ProductDetails
+                );
             }
             else
             {
-                var newItem = new SaleItem(updatedItem.ProductId, updatedItem.Quantity, updatedItem.ProductDetails);
+                var newItem = new SaleItem(
+                    Guid.Empty,
+                    saleToUpdate.Id,
+                    updatedItem.ProductId,
+                    updatedItem.Quantity,
+                    updatedItem.ProductDetails
+                );
+
                 saleToUpdate.AddItem(newItem);
             }
         }
-
-        var existingItemIds = command.Items
-                                        .Where(i => i.Id.HasValue)
-                                        .Select(i => i.Id!.Value)
-                                        .ToList();
-
-        saleToUpdate.RemoveMissingItems(existingItemIds);
 
         saleToUpdate.UpdateSale(
             command.SaleNumber,

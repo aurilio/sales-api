@@ -23,18 +23,23 @@ public class SaleItemUpdateTests
     {
         // Arrange
         var initialProduct = FakeProductDetails(100);
-        var updatedProduct = FakeProductDetails(150);
-        var item = new SaleItem(Guid.NewGuid(), 5, initialProduct);
+        var updatedProduct = FakeProductDetails(150); // Novo preço
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 5, initialProduct);
         var newQuantity = 10;
 
         // Act
         item.Update(item.ProductId, newQuantity, updatedProduct);
 
         // Assert
+        var expectedDiscount = 0.20m; // Com 10 unidades, o desconto deve ser 20%
+        var expectedUnitPrice = updatedProduct.Price * (1 - expectedDiscount); // 150 * 0.8 = 120
+        var expectedTotal = newQuantity * expectedUnitPrice; // 10 * 120 = 1200
+
         item.Quantity.Should().Be(newQuantity);
-        item.ProductDetails.Should().Be(updatedProduct);
-        item.UnitPrice.Should().Be(updatedProduct.Price * (1 - item.Discount));
-        item.TotalAmount.Should().Be(item.Quantity * item.UnitPrice);
+        item.Discount.Should().Be(expectedDiscount);
+        item.UnitPrice.Should().Be(expectedUnitPrice);
+        item.TotalAmount.Should().Be(expectedTotal);
+        item.ProductDetails.Should().BeEquivalentTo(updatedProduct);
         item.UpdatedAt.Should().NotBeNull();
     }
 
@@ -43,7 +48,7 @@ public class SaleItemUpdateTests
     {
         // Arrange
         var product = FakeProductDetails(100);
-        var item = new SaleItem(Guid.NewGuid(), 10, product);
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 10, product);
 
         // Act
         Action act = () => item.Update(item.ProductId, 21, product);
@@ -58,7 +63,7 @@ public class SaleItemUpdateTests
     {
         // Arrange
         var product = FakeProductDetails(100);
-        var item = new SaleItem(Guid.NewGuid(), 10, product);
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 10, product);
 
         // Act
         Action act = () => item.Update(item.ProductId, 0, product);
@@ -73,7 +78,7 @@ public class SaleItemUpdateTests
     {
         // Arrange
         var product = FakeProductDetails(100);
-        var item = new SaleItem(Guid.NewGuid(), 5, product);
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 5, product);
 
         // Act
         Action act = () => item.Update(item.ProductId, 5, null!);
@@ -88,7 +93,7 @@ public class SaleItemUpdateTests
     {
         // Arrange
         var product = FakeProductDetails(200);
-        var item = new SaleItem(Guid.NewGuid(), 3, product); // Sem desconto
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 3, product); // Sem desconto
 
         // Act
         item.Update(item.ProductId, 10, product); // Desconto de 20%

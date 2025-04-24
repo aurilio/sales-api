@@ -5,8 +5,6 @@ using Ambev.DeveloperEvaluation.Messaging.Interfaces;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
-using System.Security.Cryptography;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 
@@ -48,12 +46,15 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     {
         _logger.LogInformation("Handling CreateSaleCommand for SaleNumber: {SaleNumber}", command.SaleNumber);
 
+        if (command.Items == null || command.Items.Count() <= 0)
+            throw new DomainException("A sale must have at least one item.");
+
         var saleItems = MapSaleItems(command);
         var sale = BuildSale(command, saleItems);
-        
+
         foreach (var item in command.Items)
         {
-            var saleItem = new SaleItem(item.ProductId, item.Quantity, item.ProductDetails);
+            var saleItem = new SaleItem(Guid.Empty, Guid.Empty, item.ProductId, item.Quantity, item.ProductDetails);
             sale.AddItem(saleItem);
         }
 
@@ -73,7 +74,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     private static List<SaleItem> MapSaleItems(CreateSaleCommand command)
     {
         return command.Items
-            .Select(item => new SaleItem(item.ProductId, item.Quantity, item.ProductDetails))
+            .Select(item => new SaleItem(Guid.Empty, Guid.Empty, item.ProductId, item.Quantity, item.ProductDetails))
             .ToList();
     }
 

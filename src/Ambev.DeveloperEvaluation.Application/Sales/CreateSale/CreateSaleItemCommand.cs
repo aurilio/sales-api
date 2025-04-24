@@ -7,6 +7,9 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 /// </summary>
 public class CreateSaleItemCommand
 {
+    public Guid Id { get; set; }
+    public Guid SaleId { get; set; }
+
     /// <summary>
     /// Gets or sets the external identifier of the product.
     /// </summary>

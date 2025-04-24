@@ -1,18 +1,14 @@
 ﻿using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
-using Ambev.DeveloperEvaluation.Messaging.Common;
 using Ambev.DeveloperEvaluation.Messaging.Events;
 using Ambev.DeveloperEvaluation.Messaging.Interfaces;
-using Ambev.DeveloperEvaluation.ORM.Repositories;
 using Ambev.DeveloperEvaluation.Unit.Application.SaleTest.TestData;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Serilog.Core;
-using System.ComponentModel.DataAnnotations;
 using Xunit;
 
 namespace Ambev.DeveloperEvaluation.Unit.Application.SaleTest;
@@ -38,8 +34,7 @@ public class CreateSaleHandlerTests
     {
         // Arrange
         var command = CreateSaleHandlerTestData.GenerateValidCommand();
-        var sale = new Sale(command.SaleNumber, command.SaleDate, command.CustomerId, command.CustomerName, command.Branch,
-            command.Items.Select(i => new SaleItem(i.ProductId, i.Quantity, i.ProductDetails)));
+        var sale = new Sale(command.SaleNumber, command.SaleDate, command.CustomerId, command.CustomerName, command.Branch);
 
         _saleRepository.CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>()).Returns(sale);
 
@@ -73,7 +68,6 @@ public class CreateSaleHandlerTests
     {
         // Arrange
         var command = CreateSaleHandlerTestData.GenerateValidCommand();
-        //var handler = CreateHandler(out var repository, out var mapper, out var logger, out var publisher);
 
         var mappedResult = new CreateSaleResult { Id = Guid.NewGuid() };
         _mapper.Map<CreateSaleResult>(Arg.Any<Sale>()).Returns(mappedResult);
@@ -98,8 +92,7 @@ public class CreateSaleHandlerTests
     {
         // Arrange
         var command = CreateSaleHandlerTestData.GenerateValidCommand();
-        var sale = new Sale(command.SaleNumber, command.SaleDate, command.CustomerId, command.CustomerName, command.Branch,
-            command.Items.Select(i => new SaleItem(i.ProductId, i.Quantity, i.ProductDetails)).ToList());
+        var sale = new Sale(command.SaleNumber, command.SaleDate, command.CustomerId, command.CustomerName, command.Branch);
 
         var result = new CreateSaleResult { Id = sale.Id };
 
@@ -121,8 +114,7 @@ public class CreateSaleHandlerTests
 
         // Arrange
         var command = CreateSaleHandlerTestData.GenerateValidCommand();
-        var sale = new Sale(command.SaleNumber, command.SaleDate, command.CustomerId, command.CustomerName, command.Branch,
-            command.Items.Select(i => new SaleItem(i.ProductId, i.Quantity, i.ProductDetails)).ToList());
+        var sale = new Sale(command.SaleNumber, command.SaleDate, command.CustomerId, command.CustomerName, command.Branch);
 
         _saleRepository.CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>()).Returns(sale);
         _mapper.Map<CreateSaleResult>(sale).Returns(new CreateSaleResult { Id = sale.Id });
@@ -140,13 +132,13 @@ public class CreateSaleHandlerTests
     public async Task Handle_InvalidCommand_ThrowsValidationException()
     {
         // Arrange
-        var invalidCommand = new CreateSaleCommand(); // Faltam campos obrigatórios
+        var invalidCommand = new CreateSaleCommand();
 
         // Act
         var act = () => _handler.Handle(invalidCommand, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<ArgumentException>();
+        await act.Should().ThrowAsync<DomainException>();
     }
 
     [Fact(DisplayName = "Given repository throws exception When handling Then propagates exception")]
@@ -179,8 +171,7 @@ public class CreateSaleHandlerTests
             command.SaleDate,
             command.CustomerId,
             command.CustomerName,
-            command.Branch,
-            command.Items.Select(i => new SaleItem(i.ProductId, i.Quantity, i.ProductDetails)).ToList()
+            command.Branch
         );
 
         _saleRepository.CreateAsync(

@@ -2,15 +2,12 @@
 using Ambev.DeveloperEvaluation.Common.Pagination;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
-using Ambev.DeveloperEvaluation.Domain.ValueObjects;
 using AutoMapper;
 using Bogus;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using MockQueryable.NSubstitute;
 using Xunit;
-using MockQueryable;
 
 namespace Ambev.DeveloperEvaluation.Unit.Application.SaleTest;
 
@@ -41,16 +38,7 @@ public class ListSaleHandlerTests
             _faker.Date.Recent(),
             Guid.NewGuid(),
             _faker.Name.FullName(),
-            _faker.Company.CompanyName(),
-            new List<SaleItem>
-            {
-            new SaleItem(Guid.NewGuid(), 10,
-                new ProductDetails(
-                    _faker.Commerce.ProductName(),
-                    _faker.Commerce.Categories(1)[0],
-                    _faker.Random.Decimal(10, 100),
-                    _faker.Image.PicsumUrl()))
-            }
+            _faker.Company.CompanyName()
         )).ToList();
 
         var paginated = new PaginatedList<Sale>(
@@ -94,12 +82,8 @@ public class ListSaleHandlerTests
             saleDate: _faker.Date.Recent(),
             customerId: Guid.NewGuid(),
             customerName: _faker.Name.FullName(),
-            branch: "Filial São Paulo",
-            items: new List<SaleItem>
-            {
-            new SaleItem(Guid.NewGuid(), 4,
-                new ProductDetails("Produto", "Categoria", 100m, "img.png"))
-            });
+            branch: "Filial São Paulo"
+        );
 
         var paginated = new PaginatedList<Sale>(
             items: new List<Sale> { matchingSale },
@@ -138,12 +122,7 @@ public class ListSaleHandlerTests
             _faker.Date.Past(),
             Guid.NewGuid(),
             _faker.Name.FullName(),
-            _faker.Company.CompanyName(),
-            new List<SaleItem>
-            {
-            new SaleItem(Guid.NewGuid(), 3,
-                new ProductDetails("Test", "Cat", 50m, "img.png"))
-            }
+            _faker.Company.CompanyName()
         )).ToList();
 
         var paginated = new PaginatedList<Sale>(

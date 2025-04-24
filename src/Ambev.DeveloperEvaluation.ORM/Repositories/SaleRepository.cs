@@ -117,33 +117,45 @@ public class SaleRepository : ISaleRepository
     {
         _logger.LogDebug("Saving changes to database for sale ID: {SaleId}", sale.Id);
 
-        //foreach (var item in sale.Items)
-        //{
-        //    var entry = _context.Entry(item);
+        // Carrega os itens atuais persistidos no banco
+        var currentItems = await _context.SalesItem
+            .Where(i => i.SaleId == sale.Id)
+            .ToListAsync(cancellationToken);
 
-        //    if (entry.State == EntityState.Detached)
-        //    {
-        //        // Obtem o original do banco (importante!)
-        //        var trackedItem = await _context.SalesItem
-        //            .Include(i => i.ProductDetails) // importante se for owned
-        //            .FirstOrDefaultAsync(i => i.Id == item.Id, cancellationToken);
+        var currentItemIds = currentItems.Select(i => i.Id).ToHashSet();
 
-        //        if (trackedItem != null)
-        //        {
-        //            _context.Entry(trackedItem).CurrentValues.SetValues(item);
-        //            _context.Entry(trackedItem).State = EntityState.Modified;
-        //        }
-        //        else
-        //        {
-        //            _context.SalesItem.Attach(item);
-        //            entry.State = EntityState.Added;
-        //        }
-        //    }
-        //    else if (item.IsModified)
-        //    {
-        //        entry.State = EntityState.Modified;
-        //    }
-        //}
+        foreach (var item in sale.Items)
+        {
+            var entry = _context.Entry(item);
+
+            if (item.Id == Guid.Empty)
+            {
+                entry.State = EntityState.Added;
+            }
+            else
+            {
+                if (entry.State == EntityState.Detached)
+                    _context.Attach(item);
+
+                entry.State = EntityState.Modified;
+
+                // Só aplica Modified no Owned se o item já tem ID persistido
+                var productDetailsEntry = entry.Reference(e => e.ProductDetails).TargetEntry;
+                if (productDetailsEntry != null)
+                    productDetailsEntry.State = EntityState.Modified;
+            }
+        }
+
+        // Itens removidos: estavam no banco mas não estão mais na lista da entidade
+        var itemsToDelete = currentItems
+            .Where(dbItem => !sale.Items.Any(updated => updated.Id == dbItem.Id))
+            .ToList();
+
+        foreach (var item in itemsToDelete)
+        {
+            _logger.LogDebug("Marking item for deletion. Id: {ItemId}", item.Id);
+            _context.Entry(item).State = EntityState.Deleted;
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
 

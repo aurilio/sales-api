@@ -29,7 +29,7 @@ public class SaleItemTests
         var product = FakeProductDetails(price);
 
         // Act
-        var item = new SaleItem(Guid.NewGuid(), quantity, product);
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), quantity, product);
 
         // Assert
         item.Discount.Should().Be(expectedDiscount);
@@ -43,7 +43,7 @@ public class SaleItemTests
     {
         var product = FakeProductDetails(price);
 
-        var item = new SaleItem(Guid.NewGuid(), quantity, product);
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), quantity, product);
 
         item.UnitPrice.Should().Be(expectedUnitPrice);
     }
@@ -56,7 +56,7 @@ public class SaleItemTests
     {
         var product = FakeProductDetails(price);
 
-        var item = new SaleItem(Guid.NewGuid(), quantity, product);
+        var item = new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), quantity, product);
 
         item.TotalAmount.Should().Be(expectedTotal);
     }
@@ -66,7 +66,7 @@ public class SaleItemTests
     {
         var product = FakeProductDetails(100);
 
-        Action act = () => new SaleItem(Guid.NewGuid(), 21, product);
+        Action act = () => new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 21, product);
 
         act.Should().Throw<DomainException>()
             .WithMessage("Cannot sell more than 20 identical items.");
@@ -77,7 +77,7 @@ public class SaleItemTests
     {
         var product = FakeProductDetails(100);
 
-        Action act = () => new SaleItem(Guid.NewGuid(), 0, product);
+        Action act = () => new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0, product);
 
         act.Should().Throw<DomainException>()
             .WithMessage("Quantity must be greater than zero.");
@@ -87,7 +87,7 @@ public class SaleItemTests
     public void SaleItem_ShouldThrowException_WhenProductDetailsIsNull()
     {
         var product = FakeProductDetails(100);
-        Action act = () => new SaleItem(Guid.NewGuid(), 0, product);
+        Action act = () => new SaleItem(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0, product);
 
         act.Should().Throw<DomainException>()
             .WithMessage("Quantity must be greater than zero.");

@@ -3,7 +3,6 @@ using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Security.Cryptography;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
 
@@ -120,39 +119,6 @@ public class Sale : BaseEntity
     }
 
     /// <summary>
-    /// Replaces all existing sale items with a new list and recalculates the total amount.
-    /// This is typically used during updates where the full item list is replaced.
-    /// </summary>
-    /// <param name="items">The new list of sale items.</param>
-    /// <exception cref="DomainException">Thrown if the newItems list is null or empty.</exception>
-    public void ReplaceItems(IEnumerable<SaleItem> updatedItems)
-    {
-        if (updatedItems == null || !updatedItems.Any())
-            throw new DomainException("A sale must have at least one item.");
-
-        if (updatedItems == null || !updatedItems.Any())
-            throw new DomainException("A sale must have at least one item.");
-
-        // Remover os que não existem mais
-        _items.RemoveAll(existing => updatedItems.All(u => u.Id != existing.Id));
-
-        foreach (var updated in updatedItems)
-        {
-            var existing = _items.FirstOrDefault(i => i.Id == updated.Id);
-            if (existing != null)
-            {
-                existing.Update(updated.ProductId, updated.Quantity, updated.ProductDetails);
-            }
-            else
-            {
-                _items.Add(updated);
-            }
-        }
-
-        CalculateTotalAmount();
-    }
-
-    /// <summary>
     /// Validates the sale and its items using defined rules.
     /// </summary>
     /// <returns>Result of the validation process.</returns>
@@ -215,21 +181,35 @@ public class Sale : BaseEntity
         CalculateTotalAmount();
     }
 
-    //public void RemoveMissingItemsByProductId(IEnumerable<Guid> incomingProductIds)
-    //{
-    //    var itemsToRemove = _items
-    //     .Where(i => !incomingProductIds.Contains(i.ProductId))
-    //     .ToList(); // ToList evita modificação da coleção durante o loop
-
-    //    foreach (var item in itemsToRemove)
-    //        _items.Remove(item);
-
-    //    CalculateTotalAmount();
-    //}
-
-    public void RemoveMissingItems(IEnumerable<Guid> newItemIds)
+    public void RemoveItem(Guid itemId)
     {
-        _items.RemoveAll(i => !newItemIds.Contains(i.Id));
-        CalculateTotalAmount();
+        var item = Items.FirstOrDefault(i => i.Id == itemId);
+        if (item != null)
+        {
+            _items.Remove(item);
+        }
+    }
+
+    public void SyncItems(List<SaleItem> updatedItems)
+    {
+        // Atualiza ou adiciona
+        foreach (var updatedItem in updatedItems)
+        {
+            var existing = Items.FirstOrDefault(i => i.Id == updatedItem.Id);
+            if (existing != null)
+            {
+
+                existing.Update(updatedItem.ProductId, updatedItem.Quantity, updatedItem.ProductDetails);
+            }
+            else
+                AddItem(updatedItem);
+        }
+
+        var updatedIds = updatedItems.Select(x => x.Id).ToHashSet();
+        var toRemove = Items.Where(i => !updatedIds.Contains(i.Id)).ToList();
+        foreach (var item in toRemove)
+        {
+            RemoveItem(item.Id);
+        }
     }
 }
