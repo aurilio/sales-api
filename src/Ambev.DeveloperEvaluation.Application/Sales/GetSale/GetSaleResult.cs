@@ -9,6 +9,7 @@ public class GetSaleResult
     /// The unique identifier of the sale record.
     /// </summary>
     public Guid Id { get; set; }
+
     /// <summary>
     /// The number of the sale.
     /// </summary>

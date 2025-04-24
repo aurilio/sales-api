@@ -5,6 +5,8 @@ using Ambev.DeveloperEvaluation.Messaging.Interfaces;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
+using System.Security.Cryptography;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 
@@ -48,6 +50,12 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
 
         var saleItems = MapSaleItems(command);
         var sale = BuildSale(command, saleItems);
+        
+        foreach (var item in command.Items)
+        {
+            var saleItem = new SaleItem(item.ProductId, item.Quantity, item.ProductDetails);
+            sale.AddItem(saleItem);
+        }
 
         sale.SaleDate = DateTime.SpecifyKind(sale.SaleDate, DateTimeKind.Utc);
 
@@ -76,8 +84,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             saleDate: command.SaleDate,
             customerId: command.CustomerId,
             customerName: command.CustomerName,
-            branch: command.Branch,
-            items: saleItems
+            branch: command.Branch
         );
     }
 }

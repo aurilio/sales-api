@@ -2,6 +2,8 @@
 using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Cryptography;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
 
@@ -55,6 +57,11 @@ public class Sale : BaseEntity
     /// </summary>
     public DateTime? UpdatedAt { get; private set; }
 
+    [ConcurrencyCheck]
+    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    [Column("xmin", TypeName = "xid")]
+    public uint Version { get; private set; }
+
     /// <summary>
     /// Items included in this sale.
     /// </summary>
@@ -74,17 +81,16 @@ public class Sale : BaseEntity
     /// <param name="customerId">Customer’s unique identifier.</param>
     /// <param name="branch">Branch name where the sale occurred.</param>
     /// <param name="items">List of products included in the sale.</param>
-    public Sale(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch, IEnumerable<SaleItem> items)
+    public Sale(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch)
     {
-        ValidateSaleInputs(saleNumber, customerId, branch, items);
-        SetValues(saleNumber, saleDate, customerId, customerName, branch, items);
+        ValidateSaleInputs(saleNumber, customerId, branch);
+        SetValues(saleNumber, saleDate, customerId, customerName, branch);
 
         CreatedAt = DateTime.UtcNow;
-        _items.AddRange(items);
         CalculateTotalAmount();
     }
 
-    private void SetValues(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch, IEnumerable<SaleItem> items)
+    private void SetValues(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch)
     {
         SaleNumber = saleNumber;
         SaleDate = saleDate;
@@ -102,15 +108,14 @@ public class Sale : BaseEntity
     /// <param name="customerId">The updated customer ID.</param>
     /// <param name="customerName">The updated customer name.</param>
     /// <param name="branch">The updated branch where the sale occurred.</param>
-    public void UpdateSale(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch, bool isCancelled, IEnumerable<SaleItem> items)
+    public void UpdateSale(string saleNumber, DateTime saleDate, Guid customerId, string customerName, string branch, bool isCancelled)
     {
-        ValidateSaleInputs(saleNumber, customerId, branch, items);
-        SetValues(saleNumber, saleDate, customerId, customerName, branch, items);
+        ValidateSaleInputs(saleNumber, customerId, branch);
+        SetValues(saleNumber, saleDate, customerId, customerName, branch);
 
         if (isCancelled)
             IsCancelled = true;
 
-        ReplaceItems(items);
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -125,8 +130,24 @@ public class Sale : BaseEntity
         if (updatedItems == null || !updatedItems.Any())
             throw new DomainException("A sale must have at least one item.");
 
-        _items.Clear();
-        _items.AddRange(updatedItems);
+        if (updatedItems == null || !updatedItems.Any())
+            throw new DomainException("A sale must have at least one item.");
+
+        // Remover os que não existem mais
+        _items.RemoveAll(existing => updatedItems.All(u => u.Id != existing.Id));
+
+        foreach (var updated in updatedItems)
+        {
+            var existing = _items.FirstOrDefault(i => i.Id == updated.Id);
+            if (existing != null)
+            {
+                existing.Update(updated.ProductId, updated.Quantity, updated.ProductDetails);
+            }
+            else
+            {
+                _items.Add(updated);
+            }
+        }
 
         CalculateTotalAmount();
     }
@@ -170,7 +191,7 @@ public class Sale : BaseEntity
         TotalAmount = _items.Sum(i => i.TotalAmount);
     }
 
-    private static void ValidateSaleInputs(string saleNumber, Guid customerId, string branch, IEnumerable<SaleItem> items)
+    private static void ValidateSaleInputs(string saleNumber, Guid customerId, string branch)
     {
         if (string.IsNullOrWhiteSpace(saleNumber))
             throw new ArgumentException("Sale number is required.", nameof(saleNumber));
@@ -180,8 +201,35 @@ public class Sale : BaseEntity
 
         if (string.IsNullOrWhiteSpace(branch))
             throw new ArgumentException("Branch is required.", nameof(branch));
+    }
 
-        if (items == null || !items.Any())
-            throw new DomainException("A sale must have at least one item.");
+    public void AddItem(SaleItem item)
+    {
+        if (item == null)
+            throw new ArgumentNullException(nameof(item));
+
+        if (_items.Any(i => i.ProductId == item.ProductId))
+            throw new DomainException("Item with this product already exists.");
+
+        _items.Add(item);
+        CalculateTotalAmount();
+    }
+
+    //public void RemoveMissingItemsByProductId(IEnumerable<Guid> incomingProductIds)
+    //{
+    //    var itemsToRemove = _items
+    //     .Where(i => !incomingProductIds.Contains(i.ProductId))
+    //     .ToList(); // ToList evita modificação da coleção durante o loop
+
+    //    foreach (var item in itemsToRemove)
+    //        _items.Remove(item);
+
+    //    CalculateTotalAmount();
+    //}
+
+    public void RemoveMissingItems(IEnumerable<Guid> newItemIds)
+    {
+        _items.RemoveAll(i => !newItemIds.Contains(i.Id));
+        CalculateTotalAmount();
     }
 }

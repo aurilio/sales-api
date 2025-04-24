@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.Messaging.Events;
 using Ambev.DeveloperEvaluation.Messaging.Interfaces;
 using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
@@ -55,20 +56,35 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
             throw new NotFoundException("Sale", command.Id);
         }
 
-        _logger.LogDebug("Mapping sale items...");
-        var saleItems = command.Items
-            .Select(itemCommand => _mapper.Map<SaleItem>(itemCommand))
-            .ToList();
+        foreach (var updatedItem in command.Items)
+        {
+            var existingItem = saleToUpdate.Items.FirstOrDefault(i => i.Id == updatedItem.Id);
 
-        _logger.LogDebug("Updating sale aggregate...");
+            if (existingItem != null)
+            {
+                existingItem.Update(updatedItem.ProductId, updatedItem.Quantity, updatedItem.ProductDetails);
+            }
+            else
+            {
+                var newItem = new SaleItem(updatedItem.ProductId, updatedItem.Quantity, updatedItem.ProductDetails);
+                saleToUpdate.AddItem(newItem);
+            }
+        }
+
+        var existingItemIds = command.Items
+                                        .Where(i => i.Id.HasValue)
+                                        .Select(i => i.Id!.Value)
+                                        .ToList();
+
+        saleToUpdate.RemoveMissingItems(existingItemIds);
+
         saleToUpdate.UpdateSale(
             command.SaleNumber,
             command.SaleDate,
             command.CustomerId,
             command.CustomerName,
             command.Branch,
-            command.IsCancelled,
-            saleItems
+            command.IsCancelled
         );
 
         saleToUpdate.SaleDate = DateTime.SpecifyKind(saleToUpdate.SaleDate, DateTimeKind.Utc);

@@ -53,6 +53,11 @@ public class SaleItem : BaseEntity
     /// </summary>
     public ProductDetails ProductDetails { get; private set; } = default!;
 
+    private bool _isModified = false;
+    public bool IsModified => _isModified;
+
+    public void MarkAsModified() => _isModified = true;
+
     /// <summary>
     /// Parameterless constructor for EF Core.
     /// </summary>
@@ -81,6 +86,7 @@ public class SaleItem : BaseEntity
     public void Update(Guid productId, int quantity, ProductDetails productDetails)
     {
         UpdatedAt = DateTime.UtcNow;
+        _isModified = true;
         SetValues(productId, quantity, productDetails);
     }
 
@@ -99,10 +105,21 @@ public class SaleItem : BaseEntity
         
         ProductId = productId;
         Quantity = quantity;
-        ProductDetails = productDetails ?? throw new ArgumentNullException(nameof(productDetails));
         Discount = CalculateDiscount(quantity);
         UnitPrice = productDetails.Price * (1 - Discount);
         TotalAmount = Quantity * UnitPrice;
+
+        if(productDetails == null)
+            throw new ArgumentNullException(nameof(productDetails));
+        else
+        {
+            ProductDetails = new ProductDetails(
+                productDetails.Title,
+                productDetails.Category,
+                productDetails.Price,
+                productDetails.Image
+            );
+        }
     }
 
     /// <summary>

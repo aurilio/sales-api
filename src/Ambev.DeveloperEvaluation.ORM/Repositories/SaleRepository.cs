@@ -54,9 +54,10 @@ public class SaleRepository : ISaleRepository
     {
         _logger.LogDebug("Fetching sale with ID: {SaleId}", id);
 
-        var result = await _context.Sales.AsNoTracking()
-                                    .Include(s => s.Items)
-                                    .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        var result = await _context.Sales
+                            .Include(s => s.Items)
+                            .AsTracking()
+                            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
         return result;
     }
@@ -114,9 +115,36 @@ public class SaleRepository : ISaleRepository
     /// <returns>The updated sale.</returns>
     public async Task<Sale?> UpdateAsync(Sale sale, CancellationToken cancellationToken = default)
     {
-        _context.Sales.Update(sale);
-
         _logger.LogDebug("Saving changes to database for sale ID: {SaleId}", sale.Id);
+
+        //foreach (var item in sale.Items)
+        //{
+        //    var entry = _context.Entry(item);
+
+        //    if (entry.State == EntityState.Detached)
+        //    {
+        //        // Obtem o original do banco (importante!)
+        //        var trackedItem = await _context.SalesItem
+        //            .Include(i => i.ProductDetails) // importante se for owned
+        //            .FirstOrDefaultAsync(i => i.Id == item.Id, cancellationToken);
+
+        //        if (trackedItem != null)
+        //        {
+        //            _context.Entry(trackedItem).CurrentValues.SetValues(item);
+        //            _context.Entry(trackedItem).State = EntityState.Modified;
+        //        }
+        //        else
+        //        {
+        //            _context.SalesItem.Attach(item);
+        //            entry.State = EntityState.Added;
+        //        }
+        //    }
+        //    else if (item.IsModified)
+        //    {
+        //        entry.State = EntityState.Modified;
+        //    }
+        //}
+
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Sale with ID {SaleId} updated successfully.", sale.Id);
