@@ -212,4 +212,10 @@ public class Sale : BaseEntity
             RemoveItem(item.Id);
         }
     }
+
+    public void RemoveMissingItems(IEnumerable<Guid> remainingIds)
+    {
+        _items.RemoveAll(i => !remainingIds.Contains(i.Id));
+        CalculateTotalAmount();
+    }
 }
