@@ -1,4 +1,4 @@
-using Ambev.DeveloperEvaluation.Application;
+Ôªøusing Ambev.DeveloperEvaluation.Application;
 using Ambev.DeveloperEvaluation.Common.HealthChecks;
 using Ambev.DeveloperEvaluation.Common.Logging;
 using Ambev.DeveloperEvaluation.Common.Security;
@@ -116,16 +116,16 @@ public class Program
 
                 retryPolicy.Execute(() =>
                 {
-                    Log.Information("Testando conex„o com o banco...");
+                    Log.Information("Testando conex√£o com o banco...");
                     try
                     {
                         connection.Open();
                         connection.Close();
-                        Log.Information("Conex„o com o banco bem-sucedida!");
+                        Log.Information("Conex√£o com o banco bem-sucedida!");
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "Erro ao testar a conex„o com o banco.");
+                        Log.Error(ex, "Erro ao testar a conex√£o com o banco.");
                         throw;
                     }
 

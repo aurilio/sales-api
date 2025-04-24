@@ -8,6 +8,11 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 public class UpdateSaleItemCommand
 {
     /// <summary>
+    /// The unique identifier.
+    /// </summary>
+    public Guid? Id { get; set; }
+
+    /// <summary>
     /// Product identifier.
     /// </summary>
     public Guid ProductId { get; set; }

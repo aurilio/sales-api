@@ -2,7 +2,6 @@
 using Ambev.DeveloperEvaluation.Common.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
-using Ambev.DeveloperEvaluation.Domain.ValueObjects;
 using AutoMapper;
 using Bogus;
 using FluentAssertions;
@@ -41,16 +40,7 @@ public class GetSaleHandlerTests
             _faker.Date.Past(),
             Guid.NewGuid(),
             _faker.Name.FullName(),
-            _faker.Company.CompanyName(),
-            new List<SaleItem>
-            {
-            new SaleItem(Guid.NewGuid(), 10,
-                new ProductDetails(
-                    _faker.Commerce.ProductName(),
-                    _faker.Commerce.Categories(1)[0],
-                    _faker.Random.Decimal(100, 1000),
-                    _faker.Image.PicsumUrl()))
-            }
+            _faker.Company.CompanyName()
         );
 
         var expectedResult = new GetSaleResult { Id = sale.Id };

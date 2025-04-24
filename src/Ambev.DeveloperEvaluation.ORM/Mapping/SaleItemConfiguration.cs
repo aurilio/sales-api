@@ -15,7 +15,7 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
             .HasColumnType("uuid")
             .HasDefaultValueSql("gen_random_uuid()");
 
-        builder.Property<Guid>("SaleId")
+        builder.Property(si => si.SaleId)
             .IsRequired()
             .HasColumnType("uuid");
 
@@ -61,6 +61,8 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
             pd.Property(p => p.Image)
               .HasColumnName("ProductImage")
               .IsRequired();
+
+            pd.WithOwner();
         });
     }
 }

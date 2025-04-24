@@ -8,6 +8,14 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 /// </summary>
 public class UpdateSaleItemRequest
 {
+    /// <summary>
+    /// The unique identifier.
+    /// </summary>
+    public Guid? Id { get; set; }
+
+    /// <summary>
+    /// Product identifier.
+    /// </summary>
     [Required]
     public Guid ProductId { get; set; }
 

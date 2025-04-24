@@ -46,8 +46,17 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     {
         _logger.LogInformation("Handling CreateSaleCommand for SaleNumber: {SaleNumber}", command.SaleNumber);
 
+        if (command.Items == null || command.Items.Count() <= 0)
+            throw new DomainException("A sale must have at least one item.");
+
         var saleItems = MapSaleItems(command);
         var sale = BuildSale(command, saleItems);
+
+        foreach (var item in command.Items)
+        {
+            var saleItem = new SaleItem(Guid.Empty, Guid.Empty, item.ProductId, item.Quantity, item.ProductDetails);
+            sale.AddItem(saleItem);
+        }
 
         sale.SaleDate = DateTime.SpecifyKind(sale.SaleDate, DateTimeKind.Utc);
 
@@ -65,7 +74,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     private static List<SaleItem> MapSaleItems(CreateSaleCommand command)
     {
         return command.Items
-            .Select(item => new SaleItem(item.ProductId, item.Quantity, item.ProductDetails))
+            .Select(item => new SaleItem(Guid.Empty, Guid.Empty, item.ProductId, item.Quantity, item.ProductDetails))
             .ToList();
     }
 
@@ -76,8 +85,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             saleDate: command.SaleDate,
             customerId: command.CustomerId,
             customerName: command.CustomerName,
-            branch: command.Branch,
-            items: saleItems
+            branch: command.Branch
         );
     }
 }

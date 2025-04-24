@@ -10,6 +10,9 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities;
 /// </summary>
 public class SaleItem : BaseEntity
 {
+
+    public Guid SaleId { get; private set; }
+
     /// <summary>
     /// Gets the identifier of the product from the product catalog.
     /// </summary>
@@ -64,9 +67,10 @@ public class SaleItem : BaseEntity
     /// <param name="productId">The unique identifier of the product being sold.</param>
     /// <param name="quantity">The number of items sold.</param>
     /// <param name="productDetails">The denormalized product details (title, category, price, image).</param>
-    public SaleItem(Guid productId, int quantity, ProductDetails productDetails)
+    public SaleItem(Guid? id, Guid saleId, Guid productId, int quantity, ProductDetails productDetails)
     {
-        Id = Guid.NewGuid();
+        Id = id == null ? Guid.NewGuid() : id.Value;
+        SaleId = saleId;
         CreatedAt = DateTime.UtcNow;
         SetValues(productId, quantity, productDetails);
     }
@@ -96,13 +100,23 @@ public class SaleItem : BaseEntity
     private void SetValues(Guid productId, int quantity, ProductDetails productDetails)
     {
         ValidateSaleInputs(quantity);
-        
+
         ProductId = productId;
         Quantity = quantity;
-        ProductDetails = productDetails ?? throw new ArgumentNullException(nameof(productDetails));
-        Discount = CalculateDiscount(quantity);
-        UnitPrice = productDetails.Price * (1 - Discount);
-        TotalAmount = Quantity * UnitPrice;
+
+        if (productDetails == null)
+            throw new ArgumentNullException(nameof(productDetails));
+
+        ProductDetails = new ProductDetails(
+            productDetails.Title,
+            productDetails.Category,
+            productDetails.Price,
+            productDetails.Image
+        );
+
+        Discount = CalculateDiscount(quantity); // 👈 Primeiro calcula o desconto
+        UnitPrice = ProductDetails.Price * (1 - Discount); // 👈 Agora sim calcula o preço unitário com desconto
+        TotalAmount = Quantity * UnitPrice; // 👈 E por fim o total
     }
 
     /// <summary>

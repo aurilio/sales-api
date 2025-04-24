@@ -20,6 +20,8 @@ public class CreateSaleProfile : Profile
 
         CreateMap<CreateSaleItemCommand, SaleItem>()
             .ConstructUsing(cmd => new SaleItem(
+                cmd.Id,
+                cmd.SaleId,
                 cmd.ProductId,
                 cmd.Quantity,
                 cmd.ProductDetails

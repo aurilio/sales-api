@@ -47,6 +47,9 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
     {
         _logger.LogInformation("Starting UpdateSaleCommand handler for Sale ID: {SaleId}", command.Id);
 
+        if (command.Items == null || command.Items.Count() <= 0)
+            throw new DomainException("A sale must have at least one item.");
+
         var saleToUpdate = await _saleRepository.GetByIdAsync(command.Id, cancellationToken);
 
         if (saleToUpdate == null)
@@ -55,20 +58,39 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
             throw new NotFoundException("Sale", command.Id);
         }
 
-        _logger.LogDebug("Mapping sale items...");
-        var saleItems = command.Items
-            .Select(itemCommand => _mapper.Map<SaleItem>(itemCommand))
-            .ToList();
+        foreach (var updatedItem in command.Items)
+        {
+            var existingItem = saleToUpdate.Items.FirstOrDefault(i => i.Id == updatedItem.Id);
 
-        _logger.LogDebug("Updating sale aggregate...");
+            if (existingItem != null)
+            {
+                existingItem.Update(
+                    updatedItem.ProductId,
+                    updatedItem.Quantity,
+                    updatedItem.ProductDetails
+                );
+            }
+            else
+            {
+                var newItem = new SaleItem(
+                    Guid.Empty,
+                    saleToUpdate.Id,
+                    updatedItem.ProductId,
+                    updatedItem.Quantity,
+                    updatedItem.ProductDetails
+                );
+
+                saleToUpdate.AddItem(newItem);
+            }
+        }
+
         saleToUpdate.UpdateSale(
             command.SaleNumber,
             command.SaleDate,
             command.CustomerId,
             command.CustomerName,
             command.Branch,
-            command.IsCancelled,
-            saleItems
+            command.IsCancelled
         );
 
         saleToUpdate.SaleDate = DateTime.SpecifyKind(saleToUpdate.SaleDate, DateTimeKind.Utc);

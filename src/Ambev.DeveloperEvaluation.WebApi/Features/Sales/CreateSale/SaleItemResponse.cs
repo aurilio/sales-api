@@ -6,6 +6,11 @@
 public class SaleItemResponse
 {
     /// <summary>
+    /// The unique identifier.
+    /// </summary>
+    public Guid? Id { get; set; }
+
+    /// <summary>
     /// Gets or sets the external product identifier.
     /// </summary>
     public Guid ProductId { get; set; }

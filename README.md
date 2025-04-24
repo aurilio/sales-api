@@ -4,7 +4,7 @@ This is a RESTful API for sales management, designed with Clean Architecture pri
 
 ---
 
-## 🚀 Tecnologias e Padrões Utilizados
+## 🚀 Technologies and Standards Used
 
 - **.NET 8**
 - **PostgreSQL** as the relational database
@@ -125,7 +125,7 @@ The following domain events are published and logged:
 ## 👨‍💻 Author
 
 **Aurílio Mendes**  
-Senior .NET Developer | Aspiring Software Architect
+Senior .NET Developer | Aspiring Software Architect   
 LinkedIn: [@aurilio](https://www.linkedin.com/in/auriliomendes/)
 
 
