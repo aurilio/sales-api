@@ -58,6 +58,13 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
             throw new NotFoundException("Sale", command.Id);
         }
 
+        var updatedItemIds = command.Items
+            .Where(i => i.Id.HasValue)
+            .Select(i => i.Id!.Value)
+            .ToList();
+
+        saleToUpdate.RemoveMissingItems(updatedItemIds);
+
         foreach (var updatedItem in command.Items)
         {
             var existingItem = saleToUpdate.Items.FirstOrDefault(i => i.Id == updatedItem.Id);
