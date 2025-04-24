@@ -114,9 +114,9 @@ public class SaleItem : BaseEntity
             productDetails.Image
         );
 
-        Discount = CalculateDiscount(quantity); // 👈 Primeiro calcula o desconto
-        UnitPrice = ProductDetails.Price * (1 - Discount); // 👈 Agora sim calcula o preço unitário com desconto
-        TotalAmount = Quantity * UnitPrice; // 👈 E por fim o total
+        Discount = CalculateDiscount(quantity);
+        UnitPrice = ProductDetails.Price * (1 - Discount);
+        TotalAmount = Quantity * UnitPrice;
     }
 
     /// <summary>
