@@ -94,8 +94,8 @@ public class Program
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-            if (!builder.Environment.IsDevelopment())
-                builder.WebHost.UseUrls("http://0.0.0.0:8080", "https://0.0.0.0:8081");
+            if (builder.Environment.IsProduction())
+                builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
             var app = builder.Build();
 
