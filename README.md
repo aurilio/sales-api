@@ -49,7 +49,8 @@ Make sure the following are installed on your machine:
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/aurilio/sales-api.git
-cd sales-api
+
+cd sales-api\src\Ambev.DeveloperEvaluation.WebApi
 ```
 
 ### 2. Build and run with Docker Compose
@@ -60,7 +61,6 @@ docker-compose up -d
 
 ### 3. Start the API manually (if not using Docker)
 ```bash
-cd src/Ambev.DeveloperEvaluation.WebApi
 dotnet run
 ```
 
@@ -84,7 +84,6 @@ Open your browser and navigate to:
 ```bash
 
 Swagger (API)	http://localhost:8080/swagger/index.html
-Frontend (UI)	http://localhost:4200 - already integrated with the API
 
 ```
 
