@@ -1,29 +1,4 @@
 services:
-  ambev.developerevaluation.webapi:
-    container_name: ambev_developer_evaluation_webapi
-    image: ${DOCKER_REGISTRY-}ambevdeveloperevaluationwebapi
-    build:
-      context: .
-      dockerfile: Dockerfile
-    entrypoint: ["./wait-for-postgres.sh", "ambev.developerevaluation.database", "dotnet", "Ambev.DeveloperEvaluation.WebApi.dll"]
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://0.0.0.0:8080
-      - ASPNETCORE_HTTP_PORTS=8080
-      - POSTGRES_USER=developer
-      - POSTGRES_PASSWORD=ev@luAt10n
-    ports:
-      - "8080:8080"
-    depends_on:
-      ambev.developerevaluation.database:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
   ambev.developerevaluation.database:
     container_name: ambev_developer_evaluation_database
     image: postgres:13
