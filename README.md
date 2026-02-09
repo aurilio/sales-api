@@ -86,6 +86,9 @@ Open your browser and navigate to:
 Swagger (API)	http://localhost:8080/swagger/index.html
 
 ```
+## 🔗 **Frontend Repository:**  
+
+- [sales-webbapp](https://github.com/aurilio/sales-webapp/tree/main)
 
 
 ## 🧪 Running Tests
